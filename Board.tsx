@@ -1,4 +1,4 @@
-import { createContext, useCallback, useRef, useState } from "react";
+import { createContext, useCallback, useEffect, useRef, useState } from "react";
 
 // TODO: Maybe create two disctinct types for WorldCoords and ScreenCoords
 type BoardContextType = {
@@ -117,36 +117,54 @@ export default function Board({ children, options, ...props }: Props) {
   );
 
   // Zooming event
-  // const handleWheel = useCallback(
-  // (event: React.WheelEvent<SVGSVGElement>) => {
-  //   const rect = svgRef.current?.getBoundingClientRect();
-  //   if (!rect) return;
+  const handleWheel = useCallback(
+    (event: React.WheelEvent<SVGSVGElement>) => {
+      const rect = svgRef.current?.getBoundingClientRect();
+      if (!rect || !svgRef.current) return;
 
-  //   // Get pointer position before the zoom
-  //   const eventScreen = {
-  //     x: event.clientX - rect.left,
-  //     y: event.clientY - rect.top,
-  //   };
-  //   const originScreen = {
-  //     x: rect.width / 2,
-  //     y: rect.height / 2,
-  //   };
-  //   const panAmount = {
-  //     x: eventScreen.x - originScreen.x,
-  //     y: eventScreen.y - originScreen.y,
-  //   };
+      const eventScreenCoords = {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      };
 
-  //   // Apply zoom
-  //   const zoomStep = -event.deltaY / 1000;
-  //   const newZoom = zoom + zoomStep;
-  //   setZoom(Math.max(0.1, Math.min(10, newZoom)));
+      // World coordinates of the pointer before the zoom.
+      const pointerBeforeZoom = screenToWorld(
+        eventScreenCoords.x,
+        eventScreenCoords.y
+      );
 
-  //   // Find pointer position after the zoom
+      // Use zoom as a multiplier instead of difference
+      const zoomStep = 1 - event.deltaY / 1000;
+      let newZoomLevel = zoom * zoomStep;
+      newZoomLevel = Math.max(0.1, Math.min(10, newZoomLevel));
+      setZoom(newZoomLevel);
 
-  //   setPan(worldToScreen(pan.x + panAmount.x, pan.y + panAmount.y));
-  // },
-  // [screenToWorld, worldToScreen]
-  // );
+      // Since react state updates are asynchronous, we need to manually calculate
+      // the new pointer position after the zoom, we can't use screenToWorld function
+      // This is basically an inlined version of the function here:
+      const { clientWidth, clientHeight } = svgRef.current;
+      const gap = finalOptions.unit;
+      const worldX_afterZoom =
+        (eventScreenCoords.x - clientWidth / 2) / (gap * newZoomLevel) - pan.x;
+      const worldY_afterZoom =
+        (clientHeight / 2 - eventScreenCoords.y) / (gap * newZoomLevel) - pan.y;
+      const pointerAfterZoom = {
+        x: worldX_afterZoom,
+        y: worldY_afterZoom,
+      };
+
+      const diff = {
+        x: pointerAfterZoom.x - pointerBeforeZoom.x,
+        y: pointerAfterZoom.y - pointerBeforeZoom.y,
+      };
+
+      setPan((currentPan) => ({
+        x: currentPan.x + diff.x,
+        y: currentPan.y + diff.y,
+      }));
+    },
+    [screenToWorld, zoom, pan, finalOptions.unit, setZoom, setPan]
+  );
 
   return (
     <boardContext.Provider
@@ -162,7 +180,7 @@ export default function Board({ children, options, ...props }: Props) {
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
-        // onWheel={handleWheel}
+        onWheel={handleWheel}
         ref={svgRef}
         {...props}
       >
