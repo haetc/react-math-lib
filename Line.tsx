@@ -1,3 +1,6 @@
+import { useContext } from "react";
+import { boardContext } from "./Board";
+
 type LineOptions = {
   stroke?: string;
   strokeWidth?: number;
@@ -15,17 +18,23 @@ type Props = {
 };
 
 export default function Line({ from, to, options }: Props) {
+  const { worldToScreen, screenToWorld } = useContext(boardContext);
+
   const finalOptions = {
     ...defaultLineOptions,
     ...options,
   };
 
+  // Screen coords
+  const screenFrom = worldToScreen(from.x, from.y);
+  const screenTo = worldToScreen(to.x, to.y);
+
   return (
     <line
-      x1={from.x}
-      y1={from.y}
-      x2={to.x}
-      y2={to.y}
+      x1={screenFrom.x}
+      y1={screenFrom.y}
+      x2={screenTo.x}
+      y2={screenTo.y}
       stroke={finalOptions.stroke}
       strokeWidth={finalOptions.strokeWidth}
     />

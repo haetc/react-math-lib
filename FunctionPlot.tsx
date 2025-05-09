@@ -10,8 +10,8 @@ type FunctionPlotOptions = {
 };
 
 const defaultFunctionPlotOptions: FunctionPlotOptions = {
-  interval: [0, 1000],
-  step: 10,
+  interval: [-10, 10],
+  step: 0.1,
   stroke: "black",
   strokeWidth: 1,
 };
@@ -22,11 +22,14 @@ type Props = {
 };
 
 export default function FunctionPlot({ f, options }: Props) {
+  const { worldToScreenLength, worldToScreen } = useContext(boardContext);
+
   const finalOptions = {
     ...defaultFunctionPlotOptions,
     ...options,
   };
 
+  // Points are also in screen coords like all internal state
   const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
   useEffect(() => {
     const points = [];
@@ -35,7 +38,8 @@ export default function FunctionPlot({ f, options }: Props) {
       x <= finalOptions.interval[1];
       x += finalOptions.step
     ) {
-      points.push({ x, y: f(x) });
+      const y = f(x);
+      points.push(worldToScreen(x, y));
     }
     setPoints(points);
   }, [f, finalOptions.interval, finalOptions.step]);

@@ -22,12 +22,13 @@ type Props = {
 };
 
 export default function Point({ x, y, onDrag, options }: Props) {
-  const { svg } = useContext(boardContext);
+  const { svg, worldToScreen, screenToWorld } = useContext(boardContext);
   const circleRef = useRef<SVGCircleElement>(null);
 
-  const [liveCoords, setLiveCoords] = useState({ x, y });
+  // Live coords are handled in screen (SVG) coordinates
+  const [liveCoords, setLiveCoords] = useState(worldToScreen(x, y));
   useEffect(() => {
-    setLiveCoords({ x, y });
+    setLiveCoords(worldToScreen(x, y));
   }, [x, y]);
 
   // Merge default options with provided options
@@ -49,7 +50,8 @@ export default function Point({ x, y, onDrag, options }: Props) {
             x: prev.x + event.movementX,
             y: prev.y + event.movementY,
           };
-          onDrag?.(newCoords.x, newCoords.y);
+          const worldCoords = screenToWorld(newCoords.x, newCoords.y);
+          onDrag?.(worldCoords.x, worldCoords.y);
           return newCoords;
         });
       }

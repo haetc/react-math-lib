@@ -5,14 +5,13 @@ import Line from "./Line";
 import FunctionPlot from "./FunctionPlot";
 
 export default function TestScene() {
-  const [p1, setP1] = useState({ x: 100, y: 100 });
-  const [p2, setP2] = useState({ x: 200, y: 200 });
-  const [p3, setP3] = useState({ x: 300, y: 300 });
+  const [p1, setP1] = useState({ x: 1, y: 1 });
+  const [p2, setP2] = useState({ x: 2, y: 2 });
+  const [p3, setP3] = useState({ x: -1, y: 1 });
 
   const polynomial = (x: number) => {
     // The polynomial that passes through the three given points
     // It's the lagrange polynomial
-
     const l1 = (x: number) =>
       ((x - p2.x) * (x - p3.x)) / ((p1.x - p2.x) * (p1.x - p3.x));
     const l2 = (x: number) =>
@@ -26,7 +25,7 @@ export default function TestScene() {
     <Board
       className="w-full h-[500px] border rounded-md bg-white"
       options={{
-        gap: 30,
+        gap: 100,
       }}
     >
       <FunctionPlot f={polynomial} />
