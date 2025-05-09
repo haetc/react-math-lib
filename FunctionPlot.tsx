@@ -10,8 +10,8 @@ type FunctionPlotOptions = {
 };
 
 const defaultFunctionPlotOptions: FunctionPlotOptions = {
-  interval: [0, 800],
-  step: 1,
+  interval: [0, 1000],
+  step: 10,
   stroke: "black",
   strokeWidth: 1,
 };
