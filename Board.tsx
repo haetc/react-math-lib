@@ -132,9 +132,13 @@ export default function Board({ children, options, ...props }: Props) {
 
   // Zooming event
   const handleWheel = useCallback(
-    (event: React.WheelEvent<SVGSVGElement>) => {
+    (event: WheelEvent) => {
       const rect = svgRef.current?.getBoundingClientRect();
       if (!rect || !svgRef.current || !finalOptions.zoom.enabled) return;
+
+      // Prevent page scrolling
+      event.stopPropagation();
+      event.preventDefault();
 
       const eventScreenCoords = {
         x: event.clientX - rect.left,
@@ -180,6 +184,18 @@ export default function Board({ children, options, ...props }: Props) {
     [screenToWorld, zoom, pan, finalOptions.unit, setZoom, setPan]
   );
 
+  // We need this event to be added manually because React's wheel events are passive,
+  // meaning we can't call preventDefault to prevent the page from scrolling.
+  useEffect(() => {
+    const svgElement = svgRef.current;
+    if (!svgElement) return;
+
+    const wheelListener = (event: WheelEvent) => handleWheel(event);
+    svgElement.addEventListener("wheel", wheelListener, { passive: false });
+
+    return () => svgElement.removeEventListener("wheel", wheelListener);
+  }, [handleWheel]);
+
   return (
     <boardContext.Provider
       value={{
@@ -194,7 +210,6 @@ export default function Board({ children, options, ...props }: Props) {
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
-        onWheel={handleWheel}
         ref={svgRef}
         {...props}
       >

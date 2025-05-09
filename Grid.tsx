@@ -3,6 +3,8 @@ import { boardContext } from "./Board";
 
 // TODO: Find a fix for this optional options stuff. It's a mess right now, the user needs to provide all the options
 type GridOptions = {
+  xRange: [number, number];
+  yRange: [number, number];
   grid: {
     visible: boolean;
     stroke: string;
@@ -24,6 +26,8 @@ export default function Grid({ options }: Props) {
   const {
     grid = { visible: true, stroke: "black", strokeWidth: 1, gap: 1 },
     axes = { visible: true, stroke: "red", strokeWidth: 2 },
+    xRange = [-10, 10],
+    yRange = [-10, 10],
   } = options ?? {};
 
   // The coordinates for the grid lines need to be in world coordinates
@@ -35,8 +39,8 @@ export default function Grid({ options }: Props) {
   // the grid lines need to be generated dynamically based on the viewport
   // These are in world coordinates
   // TODO: Make these dynamic based on the SVG viewport
-  const xBounds = [-10, 10];
-  const yBounds = [-10, 10];
+  const xBounds = xRange;
+  const yBounds = yRange;
 
   const [xLines, setXLines] = useState<
     { x1: number; y1: number; x2: number; y2: number }[]
@@ -44,6 +48,19 @@ export default function Grid({ options }: Props) {
   const [yLines, setYLines] = useState<
     { x1: number; y1: number; x2: number; y2: number }[]
   >([]);
+
+  const [xAxis, setXAxis] = useState<{
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+  }>();
+  const [yAxis, setYAxis] = useState<{
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+  }>();
 
   useEffect(() => {
     // Generate all "ticks" for the axes
@@ -67,58 +84,45 @@ export default function Grid({ options }: Props) {
     });
     setXLines(xLines);
     setYLines(yLines);
+
+    {
+      const p1 = worldToScreen(0, xBounds[0]);
+      const p2 = worldToScreen(0, xBounds[1]);
+      setXAxis({ x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y });
+    }
+    {
+      const p1 = worldToScreen(yBounds[0], 0);
+      const p2 = worldToScreen(yBounds[1], 0);
+      setYAxis({ x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y });
+    }
   }, [grid.gap, screenToWorld, worldToScreen]);
 
   return (
     <g>
-      {xLines.map((line, i) => {
-        const isXAxis = screenToWorld(line.x1, line.y1).y === 0;
-        if (isXAxis && axes.visible) {
-          return (
-            <line
-              key={i}
-              {...line}
-              stroke={axes.stroke}
-              strokeWidth={axes.strokeWidth}
-            />
-          );
-        }
-
-        if (grid.visible) {
-          return (
-            <line
-              key={i}
-              {...line}
-              stroke={grid.stroke}
-              strokeWidth={grid.strokeWidth}
-            />
-          );
-        }
-      })}
-      {yLines.map((line, i) => {
-        const isYAxis = screenToWorld(line.x1, line.y1).x === 0;
-        if (isYAxis && axes.visible) {
-          return (
-            <line
-              key={i}
-              {...line}
-              stroke={axes.stroke}
-              strokeWidth={axes.strokeWidth}
-            />
-          );
-        }
-
-        if (grid.visible) {
-          return (
-            <line
-              key={i}
-              {...line}
-              stroke={grid.stroke}
-              strokeWidth={grid.strokeWidth}
-            />
-          );
-        }
-      })}
+      {grid.visible &&
+        xLines.map((line, i) => (
+          <line
+            key={i}
+            {...line}
+            stroke={grid.stroke}
+            strokeWidth={grid.strokeWidth}
+          />
+        ))}
+      {grid.visible &&
+        yLines.map((line, i) => (
+          <line
+            key={i}
+            {...line}
+            stroke={grid.stroke}
+            strokeWidth={grid.strokeWidth}
+          />
+        ))}
+      {axes.visible && xAxis && (
+        <line {...xAxis} stroke={axes.stroke} strokeWidth={axes.strokeWidth} />
+      )}
+      {axes.visible && yAxis && (
+        <line {...yAxis} stroke={axes.stroke} strokeWidth={axes.strokeWidth} />
+      )}
     </g>
   );
 }

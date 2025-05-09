@@ -49,6 +49,8 @@ export default function TestScene() {
       >
         <Grid
           options={{
+            xRange: [-10, 10],
+            yRange: [-10, 10],
             grid: {
               visible: true,
               stroke: "#ccc",
