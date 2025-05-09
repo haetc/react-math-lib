@@ -42,7 +42,7 @@ export default function FunctionPlot({ f, options }: Props) {
       points.push(worldToScreen(x, y));
     }
     setPoints(points);
-  }, [f, finalOptions.interval, finalOptions.step]);
+  }, [f, finalOptions.interval, finalOptions.step, worldToScreen]);
 
   const pathData =
     points.length > 0

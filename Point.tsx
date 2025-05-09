@@ -8,12 +8,6 @@ type PointOptions = {
   draggable?: boolean;
 };
 
-const defaultPointOptions: PointOptions = {
-  fill: "black",
-  radius: 5,
-  draggable: true,
-};
-
 type Props = {
   x: number;
   y: number;
@@ -22,36 +16,37 @@ type Props = {
 };
 
 export default function Point({ x, y, onDrag, options }: Props) {
-  const { svg, worldToScreen, screenToWorld } = useContext(boardContext);
+  const { svg, worldToScreen, screenToWorld, screenToWorldLength } =
+    useContext(boardContext);
   const circleRef = useRef<SVGCircleElement>(null);
 
-  // Live coords are handled in screen (SVG) coordinates
-  const [liveCoords, setLiveCoords] = useState(worldToScreen(x, y));
-  useEffect(() => {
-    setLiveCoords(worldToScreen(x, y));
-  }, [x, y, worldToScreen]);
+  const { fill = "black", radius = 5, draggable = true } = options ?? {};
 
-  // Merge default options with provided options
-  const finalOptions = {
-    ...defaultPointOptions,
-    ...options,
-  };
+  // Live coords are handled in world coordinates
+  const [liveCoords, setLiveCoords] = useState({ x, y });
+  useEffect(() => {
+    setLiveCoords({ x, y });
+  }, [x, y]);
 
   const [isDragging, setIsDragging] = useState(false);
   const handleMouseDown = (event: React.MouseEvent<SVGCircleElement>) => {
+    event.stopPropagation();
     setIsDragging(true);
     svg?.style.setProperty("cursor", "grabbing");
   };
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
       if (isDragging) {
+        // Transform the movement vector to world coordinates
+        const movementX = screenToWorldLength(event.movementX);
+        const movementY = -screenToWorldLength(event.movementY);
+
         setLiveCoords((prev) => {
           const newCoords = {
-            x: prev.x + event.movementX,
-            y: prev.y + event.movementY,
+            x: prev.x + movementX,
+            y: prev.y + movementY,
           };
-          const worldCoords = screenToWorld(newCoords.x, newCoords.y);
-          onDrag?.(worldCoords.x, worldCoords.y);
+          onDrag?.(newCoords.x, newCoords.y);
           return newCoords;
         });
       }
@@ -68,22 +63,21 @@ export default function Point({ x, y, onDrag, options }: Props) {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging]);
+  }, [isDragging, screenToWorld]);
+
+  // Conversion to screen coords for rendering
+  const screenCoords = worldToScreen(liveCoords.x, liveCoords.y);
 
   return (
     <circle
-      cx={liveCoords.x}
-      cy={liveCoords.y}
-      r={finalOptions.radius}
-      fill={finalOptions.fill}
+      cx={screenCoords.x}
+      cy={screenCoords.y}
+      r={radius}
+      fill={fill}
       ref={circleRef}
-      onMouseDown={finalOptions.draggable ? handleMouseDown : undefined}
+      onMouseDown={draggable ? handleMouseDown : undefined}
       style={{
-        cursor: isDragging
-          ? "unset"
-          : finalOptions.draggable
-          ? "grab"
-          : "default",
+        cursor: isDragging ? "unset" : draggable ? "grab" : "default",
       }}
     />
   );
