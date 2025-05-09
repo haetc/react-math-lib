@@ -33,9 +33,10 @@ type Props = {
 export default function Board({ children, options, ...props }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
 
-  // Pan is in screen (SVG) coordinates
+  // Pan is in world coordinates
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  // const [zoom, setZoom] = useState(1);
+  // Zoom is basically a multiplier for the unit
+  const [zoom, setZoom] = useState(1);
 
   const finalOptions = {
     ...defaultBoardOptions,
@@ -60,12 +61,12 @@ export default function Board({ children, options, ...props }: Props) {
       const gap = finalOptions.unit;
       const { clientWidth, clientHeight } = svgRef.current;
 
-      const screenX = clientWidth / 2 + x * gap + pan.x;
-      const screenY = clientHeight / 2 - y * gap + pan.y;
+      const screenX = clientWidth / 2 + (x + pan.x) * gap * zoom;
+      const screenY = clientHeight / 2 - (y + pan.y) * gap * zoom;
 
       return { x: screenX, y: screenY };
     },
-    [finalOptions.unit, pan]
+    [finalOptions.unit, pan, zoom]
   );
   const screenToWorld = useCallback(
     (x: number, y: number) => {
@@ -75,20 +76,20 @@ export default function Board({ children, options, ...props }: Props) {
       const gap = finalOptions.unit;
       const { clientWidth, clientHeight } = svgRef.current;
 
-      const worldX = (x - clientWidth / 2 - pan.x) / gap;
-      const worldY = (clientHeight / 2 - y - pan.y) / gap;
+      const worldX = (x - clientWidth / 2) / (gap * zoom) - pan.x;
+      const worldY = (clientHeight / 2 - y) / (gap * zoom) - pan.y;
 
       return { x: worldX, y: worldY };
     },
-    [finalOptions.unit, pan]
+    [finalOptions.unit, pan, zoom]
   );
   const worldToScreenLength = useCallback(
-    (length: number) => length * finalOptions.unit,
-    [finalOptions.unit]
+    (length: number) => length * finalOptions.unit * zoom,
+    [finalOptions.unit, zoom]
   );
   const screenToWorldLength = useCallback(
-    (length: number) => length / finalOptions.unit,
-    [finalOptions.unit]
+    (length: number) => length / (finalOptions.unit * zoom),
+    [finalOptions.unit, zoom]
   );
 
   // Panning event
@@ -99,17 +100,53 @@ export default function Board({ children, options, ...props }: Props) {
   const handleMouseUp = () => {
     setIsPanning(false);
   };
-
   const handleMouseMove = useCallback(
     (event: React.MouseEvent<SVGSVGElement>) => {
       if (!isPanning) return;
+
+      // Transform the movement vector to world coordinates
+      const movementX = screenToWorldLength(event.movementX);
+      const movementY = -screenToWorldLength(event.movementY);
+
       setPan(({ x, y }) => ({
-        x: x + event.movementX,
-        y: y + event.movementY,
+        x: x + movementX,
+        y: y + movementY,
       }));
     },
     [isPanning]
   );
+
+  // Zooming event
+  // const handleWheel = useCallback(
+  // (event: React.WheelEvent<SVGSVGElement>) => {
+  //   const rect = svgRef.current?.getBoundingClientRect();
+  //   if (!rect) return;
+
+  //   // Get pointer position before the zoom
+  //   const eventScreen = {
+  //     x: event.clientX - rect.left,
+  //     y: event.clientY - rect.top,
+  //   };
+  //   const originScreen = {
+  //     x: rect.width / 2,
+  //     y: rect.height / 2,
+  //   };
+  //   const panAmount = {
+  //     x: eventScreen.x - originScreen.x,
+  //     y: eventScreen.y - originScreen.y,
+  //   };
+
+  //   // Apply zoom
+  //   const zoomStep = -event.deltaY / 1000;
+  //   const newZoom = zoom + zoomStep;
+  //   setZoom(Math.max(0.1, Math.min(10, newZoom)));
+
+  //   // Find pointer position after the zoom
+
+  //   setPan(worldToScreen(pan.x + panAmount.x, pan.y + panAmount.y));
+  // },
+  // [screenToWorld, worldToScreen]
+  // );
 
   return (
     <boardContext.Provider
@@ -125,6 +162,7 @@ export default function Board({ children, options, ...props }: Props) {
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
+        // onWheel={handleWheel}
         ref={svgRef}
         {...props}
       >
