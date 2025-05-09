@@ -29,7 +29,7 @@ export default function Point({ x, y, onDrag, options }: Props) {
   const [liveCoords, setLiveCoords] = useState(worldToScreen(x, y));
   useEffect(() => {
     setLiveCoords(worldToScreen(x, y));
-  }, [x, y]);
+  }, [x, y, worldToScreen]);
 
   // Merge default options with provided options
   const finalOptions = {

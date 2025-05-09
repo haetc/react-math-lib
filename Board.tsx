@@ -1,13 +1,15 @@
-import { createContext, useRef, useState } from "react";
+import { createContext, useCallback, useRef, useState } from "react";
 
 // TODO: Maybe create two disctinct types for WorldCoords and ScreenCoords
-export const boardContext = createContext<{
+type BoardContextType = {
   svg: SVGSVGElement | null;
   worldToScreen: (x: number, y: number) => { x: number; y: number };
   screenToWorld: (x: number, y: number) => { x: number; y: number };
   worldToScreenLength: (length: number) => number;
   screenToWorldLength: (length: number) => number;
-}>({
+};
+
+export const boardContext = createContext<BoardContextType>({
   svg: null,
   worldToScreen: (x, y) => ({ x, y }),
   screenToWorld: (x, y) => ({ x, y }),
@@ -16,11 +18,11 @@ export const boardContext = createContext<{
 });
 
 type BoardOptions = {
-  gap: number;
+  unit: number;
 };
 
 const defaultBoardOptions: BoardOptions = {
-  gap: 10,
+  unit: 10,
 };
 
 type Props = {
@@ -39,43 +41,55 @@ export default function Board({ children, options, ...props }: Props) {
     ...options,
   };
 
-  const worldToScreen = (x: number, y: number) => {
-    if (!svgRef.current) return { x, y };
+  const worldToScreen = useCallback(
+    (x: number, y: number) => {
+      if (!svgRef.current) return { x, y };
 
-    // World coordinates:
-    // Origin: Center
-    // Right, Up: Positive
+      // World coordinates:
+      // Origin: Center
+      // Right, Up: Positive
 
-    // Screen (SVG) coordinates:
-    // Origin: Top Left
-    // Right, Down: Positive
+      // Screen (SVG) coordinates:
+      // Origin: Top Left
+      // Right, Down: Positive
 
-    // Gap is how many SVG pixels is a single world unit
-    const gap = finalOptions.gap;
-    const { clientWidth, clientHeight } = svgRef.current;
+      // Gap is how many SVG pixels is a single world unit
+      const gap = finalOptions.unit;
+      const { clientWidth, clientHeight } = svgRef.current;
 
-    const screenX = clientWidth / 2 + x * gap;
-    const screenY = clientHeight / 2 - y * gap;
+      const screenX = clientWidth / 2 + x * gap;
+      const screenY = clientHeight / 2 - y * gap;
 
-    return { x: screenX, y: screenY };
-  };
+      return { x: screenX, y: screenY };
+    },
+    [finalOptions.unit]
+  );
 
-  const screenToWorld = (x: number, y: number) => {
-    if (!svgRef.current) {
-      return { x, y };
-    }
-    const gap = finalOptions.gap;
-    const { clientWidth, clientHeight } = svgRef.current;
+  const screenToWorld = useCallback(
+    (x: number, y: number) => {
+      if (!svgRef.current) {
+        return { x, y };
+      }
+      const gap = finalOptions.unit;
+      const { clientWidth, clientHeight } = svgRef.current;
 
-    const worldX = (x - clientWidth / 2) / gap;
-    const worldY = (clientHeight / 2 - y) / gap;
+      const worldX = (x - clientWidth / 2) / gap;
+      const worldY = (clientHeight / 2 - y) / gap;
 
-    return { x: worldX, y: worldY };
-  };
+      return { x: worldX, y: worldY };
+    },
+    [finalOptions.unit]
+  );
 
-  const worldToScreenLength = (length: number) => length * finalOptions.gap;
+  const worldToScreenLength = useCallback(
+    (length: number) => length * finalOptions.unit,
+    [finalOptions.unit]
+  );
 
-  const screenToWorldLength = (length: number) => length / finalOptions.gap;
+  const screenToWorldLength = useCallback(
+    (length: number) => length / finalOptions.unit,
+    [finalOptions.unit]
+  );
 
   return (
     <boardContext.Provider

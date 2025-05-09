@@ -3,6 +3,7 @@ import Board from "./Board";
 import Point from "./Point";
 import Line from "./Line";
 import FunctionPlot from "./FunctionPlot";
+import Grid from "./Grid";
 
 export default function TestScene() {
   const [p1, setP1] = useState({ x: 1, y: 1 });
@@ -25,9 +26,10 @@ export default function TestScene() {
     <Board
       className="w-full h-[500px] border rounded-md bg-white"
       options={{
-        gap: 100,
+        unit: 50,
       }}
     >
+      <Grid />
       <FunctionPlot f={polynomial} />
       <Point x={p1.x} y={p1.y} onDrag={(x, y) => setP1({ x, y })} />
       <Point x={p2.x} y={p2.y} onDrag={(x, y) => setP2({ x, y })} />
