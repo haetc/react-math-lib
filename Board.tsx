@@ -19,10 +19,22 @@ export const boardContext = createContext<BoardContextType>({
 
 type BoardOptions = {
   unit: number;
+  zoom: {
+    enabled: boolean;
+  };
+  pan: {
+    enabled: boolean;
+  };
 };
 
 const defaultBoardOptions: BoardOptions = {
   unit: 10,
+  zoom: {
+    enabled: true,
+  },
+  pan: {
+    enabled: true,
+  },
 };
 
 type Props = {
@@ -95,14 +107,16 @@ export default function Board({ children, options, ...props }: Props) {
   // Panning event
   const [isPanning, setIsPanning] = useState(false);
   const handleMouseDown = () => {
+    if (!finalOptions.pan.enabled) return;
     setIsPanning(true);
   };
   const handleMouseUp = () => {
+    if (!finalOptions.pan.enabled) return;
     setIsPanning(false);
   };
   const handleMouseMove = useCallback(
     (event: React.MouseEvent<SVGSVGElement>) => {
-      if (!isPanning) return;
+      if (!finalOptions.pan.enabled || !isPanning) return;
 
       // Transform the movement vector to world coordinates
       const movementX = screenToWorldLength(event.movementX);
@@ -120,7 +134,7 @@ export default function Board({ children, options, ...props }: Props) {
   const handleWheel = useCallback(
     (event: React.WheelEvent<SVGSVGElement>) => {
       const rect = svgRef.current?.getBoundingClientRect();
-      if (!rect || !svgRef.current) return;
+      if (!rect || !svgRef.current || !finalOptions.zoom.enabled) return;
 
       const eventScreenCoords = {
         x: event.clientX - rect.left,
