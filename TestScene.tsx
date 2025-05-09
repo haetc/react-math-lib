@@ -29,7 +29,21 @@ export default function TestScene() {
         unit: 50,
       }}
     >
-      <Grid />
+      <Grid
+        options={{
+          grid: {
+            visible: true,
+            stroke: "#ccc",
+            strokeWidth: 0.5,
+            gap: 1,
+          },
+          axes: {
+            visible: true,
+            stroke: "#000",
+            strokeWidth: 1,
+          },
+        }}
+      />
       <FunctionPlot f={polynomial} />
       <Point x={p1.x} y={p1.y} onDrag={(x, y) => setP1({ x, y })} />
       <Point x={p2.x} y={p2.y} onDrag={(x, y) => setP2({ x, y })} />
