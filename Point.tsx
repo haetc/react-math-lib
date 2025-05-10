@@ -22,6 +22,9 @@ export default function Point({ x, y, onDrag, options }: Props) {
 
   const { fill = "black", radius = 5, draggable = true } = options ?? {};
 
+  // Define a hitbox radius to make the point easier to drag
+  const hitboxRadius = Math.max(radius + 10, 10);
+
   // Live coords are handled in world coordinates
   const [liveCoords, setLiveCoords] = useState({ x, y });
   useEffect(() => {
@@ -123,17 +126,31 @@ export default function Point({ x, y, onDrag, options }: Props) {
   const screenCoords = worldToScreen(liveCoords.x, liveCoords.y);
 
   return (
-    <circle
-      cx={screenCoords.x}
-      cy={screenCoords.y}
-      r={radius}
-      fill={fill}
-      ref={circleRef}
-      onMouseDown={draggable ? handleMouseDown : undefined}
-      onTouchStart={draggable ? handleTouchStart : undefined}
-      style={{
-        cursor: isDragging ? "unset" : draggable ? "grab" : "default",
-      }}
-    />
+    <g>
+      {/* This is the visual circle */}
+      <circle
+        cx={screenCoords.x}
+        cy={screenCoords.y}
+        r={radius}
+        fill={fill}
+        ref={circleRef}
+      />
+      {draggable && (
+        // The invisible circle on top of the visual circle
+        // This is the actual circle that handles the events
+        <circle
+          cx={screenCoords.x}
+          cy={screenCoords.y}
+          r={hitboxRadius}
+          fill="transparent"
+          stroke="transparent"
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+          style={{
+            cursor: isDragging ? "unset" : "grab",
+          }}
+        />
+      )}
+    </g>
   );
 }
