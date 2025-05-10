@@ -104,6 +104,24 @@ export default function Board({ children, options, ...props }: Props) {
     [finalOptions.unit, zoom]
   );
 
+  // Helper functions for touch gestures
+  const getDistance = (t1: React.Touch, t2: React.Touch): number => {
+    return Math.sqrt(
+      Math.pow(t1.clientX - t2.clientX, 2) +
+        Math.pow(t1.clientY - t2.clientY, 2)
+    );
+  };
+
+  const getScreenMidpoint = (
+    t1: React.Touch,
+    t2: React.Touch
+  ): { x: number; y: number } => {
+    return {
+      x: (t1.clientX + t2.clientX) / 2,
+      y: (t1.clientY + t2.clientY) / 2,
+    };
+  };
+
   // Panning event
   const [isPanning, setIsPanning] = useState(false);
   const handleMouseDown = () => {
@@ -132,52 +150,166 @@ export default function Board({ children, options, ...props }: Props) {
 
   // Touch panning
   const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
+  const pinchStateRef = useRef<{
+    initialDistance: number;
+    zoomAtPinchStart: number;
+    worldMidpointAtPinchStart: { x: number; y: number };
+    screenMidpointAtPinchStart: { x: number; y: number }; // SVG-relative
+  } | null>(null);
 
   const handleTouchStart = (event: React.TouchEvent<SVGSVGElement>) => {
-    if (!finalOptions.pan.enabled || event.touches.length !== 1) return;
-    setIsPanning(true);
-    lastTouchRef.current = {
-      x: event.touches[0].clientX,
-      y: event.touches[0].clientY,
-    };
-    event.preventDefault();
+    if (!svgRef.current) return;
+    event.preventDefault(); // General prevention for board interactions
+
+    if (event.touches.length === 1 && finalOptions.pan.enabled) {
+      pinchStateRef.current = null; // Ensure not in pinch mode
+      setIsPanning(true);
+      lastTouchRef.current = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY,
+      };
+    } else if (event.touches.length === 2 && finalOptions.zoom.enabled) {
+      setIsPanning(false); // Stop panning if it was active
+      const touch1 = event.touches[0];
+      const touch2 = event.touches[1];
+
+      const initialDistance = getDistance(touch1, touch2);
+      const screenMidpointRaw = getScreenMidpoint(touch1, touch2);
+
+      const rect = svgRef.current.getBoundingClientRect();
+      // Adjust screenMidpoint to be relative to the SVG element
+      const adjustedScreenMidpoint = {
+        x: screenMidpointRaw.x - rect.left,
+        y: screenMidpointRaw.y - rect.top,
+      };
+      const worldMidpoint = screenToWorld(
+        adjustedScreenMidpoint.x,
+        adjustedScreenMidpoint.y
+      );
+
+      pinchStateRef.current = {
+        initialDistance,
+        zoomAtPinchStart: zoom,
+        worldMidpointAtPinchStart: worldMidpoint,
+        screenMidpointAtPinchStart: adjustedScreenMidpoint,
+      };
+    }
   };
 
   const handleTouchMove = useCallback(
     (event: React.TouchEvent<SVGSVGElement>) => {
-      if (
-        !finalOptions.pan.enabled ||
-        !isPanning ||
-        event.touches.length !== 1 ||
-        !lastTouchRef.current
-      )
-        return;
-
+      if (!svgRef.current) return;
       event.preventDefault();
 
-      const touch = event.touches[0];
-      const movementX = screenToWorldLength(
-        touch.clientX - lastTouchRef.current.x
-      );
-      const movementY = -screenToWorldLength(
-        touch.clientY - lastTouchRef.current.y
-      );
+      // Panning with one finger
+      if (
+        event.touches.length === 1 &&
+        isPanning &&
+        lastTouchRef.current &&
+        finalOptions.pan.enabled
+      ) {
+        const touch = event.touches[0];
+        const movementX = screenToWorldLength(
+          touch.clientX - lastTouchRef.current.x
+        );
+        const movementY = -screenToWorldLength(
+          touch.clientY - lastTouchRef.current.y
+        );
 
-      setPan(({ x, y }) => ({
-        x: x + movementX,
-        y: y + movementY,
-      }));
+        setPan(({ x, y }) => ({
+          x: x + movementX,
+          y: y + movementY,
+        }));
 
-      lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+        lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+      }
+      // Pinch zooming with two fingers
+      else if (
+        event.touches.length === 2 &&
+        pinchStateRef.current &&
+        finalOptions.zoom.enabled
+      ) {
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        const currentDistance = getDistance(touch1, touch2);
+
+        const {
+          initialDistance,
+          zoomAtPinchStart,
+          worldMidpointAtPinchStart,
+          screenMidpointAtPinchStart,
+        } = pinchStateRef.current;
+
+        if (initialDistance === 0) return; // Avoid division by zero
+
+        let scaleFactor = currentDistance / initialDistance;
+        let newZoomLevel = zoomAtPinchStart * scaleFactor;
+        newZoomLevel = Math.max(0.1, Math.min(10, newZoomLevel)); // Clamp zoom
+
+        setZoom(newZoomLevel);
+
+        // Adjust pan to keep the content centered at the pinch midpoint
+        // This logic is similar to the mouse wheel zoom adjustment
+        const { clientWidth, clientHeight } = svgRef.current;
+        const gap = finalOptions.unit;
+
+        // Calculate the world coordinates of the screenMidpointAtPinchStart
+        // using the newZoomLevel but the *current/old* pan state.
+        const pointerAfterZoom_X =
+          (screenMidpointAtPinchStart.x - clientWidth / 2) /
+            (gap * newZoomLevel) -
+          pan.x;
+        const pointerAfterZoom_Y =
+          (clientHeight / 2 - screenMidpointAtPinchStart.y) /
+            (gap * newZoomLevel) -
+          pan.y;
+
+        // Calculate the difference needed to align this with the original worldMidpointAtPinchStart
+        const panAdjustmentX = pointerAfterZoom_X - worldMidpointAtPinchStart.x;
+        const panAdjustmentY = pointerAfterZoom_Y - worldMidpointAtPinchStart.y;
+
+        setPan((currentPan) => ({
+          x: currentPan.x + panAdjustmentX,
+          y: currentPan.y + panAdjustmentY,
+        }));
+      }
     },
-    [isPanning, finalOptions.pan.enabled, screenToWorldLength, setPan]
+    [
+      isPanning,
+      finalOptions.pan.enabled,
+      finalOptions.zoom.enabled,
+      screenToWorldLength,
+      setPan,
+      finalOptions.unit,
+      pan, // pan is needed for pan adjustment calculation
+      setZoom,
+      screenToWorld, // screenToWorld is used in handleTouchStart via pinchStateRef setup
+      zoom, // zoom is used in handleTouchStart via pinchStateRef setup
+    ]
   );
 
   const handleTouchEnd = (event: React.TouchEvent<SVGSVGElement>) => {
-    if (!finalOptions.pan.enabled) return;
-    setIsPanning(false);
-    lastTouchRef.current = null;
     event.preventDefault();
+
+    if (pinchStateRef.current && event.touches.length < 2) {
+      // Pinch ended or one finger lifted from a pinch
+      pinchStateRef.current = null;
+    }
+
+    if (event.touches.length === 0) {
+      // All fingers lifted
+      setIsPanning(false);
+      lastTouchRef.current = null;
+    } else if (event.touches.length === 1 && finalOptions.pan.enabled) {
+      // One finger remains (could be after a pinch, or a single touch continuing)
+      // Transition to panning with this finger
+      setIsPanning(true);
+      pinchStateRef.current = null; // Ensure not in pinch mode
+      lastTouchRef.current = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY,
+      };
+    }
   };
 
   // Zooming event
