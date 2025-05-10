@@ -127,8 +127,58 @@ export default function Board({ children, options, ...props }: Props) {
         y: y + movementY,
       }));
     },
-    [isPanning]
+    [isPanning, finalOptions.pan.enabled, screenToWorldLength, setPan]
   );
+
+  // Touch panning
+  const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = (event: React.TouchEvent<SVGSVGElement>) => {
+    if (!finalOptions.pan.enabled || event.touches.length !== 1) return;
+    setIsPanning(true);
+    lastTouchRef.current = {
+      x: event.touches[0].clientX,
+      y: event.touches[0].clientY,
+    };
+    event.preventDefault();
+  };
+
+  const handleTouchMove = useCallback(
+    (event: React.TouchEvent<SVGSVGElement>) => {
+      if (
+        !finalOptions.pan.enabled ||
+        !isPanning ||
+        event.touches.length !== 1 ||
+        !lastTouchRef.current
+      )
+        return;
+
+      event.preventDefault();
+
+      const touch = event.touches[0];
+      const movementX = screenToWorldLength(
+        touch.clientX - lastTouchRef.current.x
+      );
+      const movementY = -screenToWorldLength(
+        touch.clientY - lastTouchRef.current.y
+      );
+
+      setPan(({ x, y }) => ({
+        x: x + movementX,
+        y: y + movementY,
+      }));
+
+      lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+    },
+    [isPanning, finalOptions.pan.enabled, screenToWorldLength, setPan]
+  );
+
+  const handleTouchEnd = (event: React.TouchEvent<SVGSVGElement>) => {
+    if (!finalOptions.pan.enabled) return;
+    setIsPanning(false);
+    lastTouchRef.current = null;
+    event.preventDefault();
+  };
 
   // Zooming event
   const handleWheel = useCallback(
@@ -210,8 +260,13 @@ export default function Board({ children, options, ...props }: Props) {
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         ref={svgRef}
         {...props}
+        // The touchAction is needed to prevent the page from scrolling when panning the board
+        style={{ touchAction: "none", ...props.style }}
       >
         {children}
       </svg>

@@ -34,6 +34,20 @@ export default function Point({ x, y, onDrag, options }: Props) {
     setIsDragging(true);
     svg?.style.setProperty("cursor", "grabbing");
   };
+
+  const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
+  const handleTouchStart = (event: React.TouchEvent<SVGCircleElement>) => {
+    if (!draggable || event.touches.length !== 1) return;
+    event.stopPropagation(); // Prevent board panning
+    event.preventDefault(); // Prevent page scrolling/zooming during drag
+    setIsDragging(true);
+    lastTouchRef.current = {
+      x: event.touches[0].clientX,
+      y: event.touches[0].clientY,
+    };
+    svg?.style.setProperty("cursor", "grabbing");
+  };
+
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
       if (isDragging) {
@@ -53,17 +67,57 @@ export default function Point({ x, y, onDrag, options }: Props) {
     };
 
     const handleMouseUp = () => {
-      setIsDragging(false);
-      svg?.style.setProperty("cursor", "unset");
+      if (isDragging) {
+        setIsDragging(false);
+        svg?.style.setProperty("cursor", "unset");
+      }
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (isDragging && event.touches.length === 1 && lastTouchRef.current) {
+        event.preventDefault();
+        const touch = event.touches[0];
+        const movementX = screenToWorldLength(
+          touch.clientX - lastTouchRef.current.x
+        );
+        const movementY = -screenToWorldLength(
+          touch.clientY - lastTouchRef.current.y
+        );
+
+        setLiveCoords((prev) => {
+          const newCoords = {
+            x: prev.x + movementX,
+            y: prev.y + movementY,
+          };
+          onDrag?.(newCoords.x, newCoords.y);
+          return newCoords;
+        });
+        lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+      }
+    };
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      if (isDragging) {
+        if (event.touches.length === 0) {
+          setIsDragging(false);
+          svg?.style.setProperty("cursor", "unset");
+          lastTouchRef.current = null;
+          event.preventDefault();
+        }
+      }
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd, { passive: false });
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [isDragging, screenToWorld]);
+  }, [isDragging, screenToWorldLength, onDrag, svg, draggable]); // Added screenToWorldLength, onDrag, svg, draggable to deps
 
   // Conversion to screen coords for rendering
   const screenCoords = worldToScreen(liveCoords.x, liveCoords.y);
@@ -76,6 +130,7 @@ export default function Point({ x, y, onDrag, options }: Props) {
       fill={fill}
       ref={circleRef}
       onMouseDown={draggable ? handleMouseDown : undefined}
+      onTouchStart={draggable ? handleTouchStart : undefined}
       style={{
         cursor: isDragging ? "unset" : draggable ? "grab" : "default",
       }}
