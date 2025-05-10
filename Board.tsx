@@ -154,7 +154,6 @@ export default function Board({ children, options, ...props }: Props) {
     initialDistance: number;
     zoomAtPinchStart: number;
     worldMidpointAtPinchStart: { x: number; y: number };
-    screenMidpointAtPinchStart: { x: number; y: number }; // SVG-relative
   } | null>(null);
 
   const handleTouchStart = (event: React.TouchEvent<SVGSVGElement>) => {
@@ -191,7 +190,6 @@ export default function Board({ children, options, ...props }: Props) {
         initialDistance,
         zoomAtPinchStart: zoom,
         worldMidpointAtPinchStart: worldMidpoint,
-        screenMidpointAtPinchStart: adjustedScreenMidpoint,
       };
     }
   };
@@ -223,7 +221,7 @@ export default function Board({ children, options, ...props }: Props) {
 
         lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
       }
-      // Pinch zooming with two fingers
+      // Pinch zooming and panning with two fingers
       else if (
         event.touches.length === 2 &&
         pinchStateRef.current &&
@@ -231,47 +229,45 @@ export default function Board({ children, options, ...props }: Props) {
       ) {
         const touch1 = event.touches[0];
         const touch2 = event.touches[1];
+
+        if (!svgRef.current) return;
+        const rect = svgRef.current.getBoundingClientRect();
+
         const currentDistance = getDistance(touch1, touch2);
+        const currentScreenMidpointRaw = getScreenMidpoint(touch1, touch2);
+        const currentScreenMidpoint = {
+          x: currentScreenMidpointRaw.x - rect.left,
+          y: currentScreenMidpointRaw.y - rect.top,
+        };
 
-        const {
-          initialDistance,
-          zoomAtPinchStart,
-          worldMidpointAtPinchStart,
-          screenMidpointAtPinchStart,
-        } = pinchStateRef.current;
+        const { initialDistance, zoomAtPinchStart, worldMidpointAtPinchStart } =
+          pinchStateRef.current;
 
-        if (initialDistance === 0) return; // Avoid division by zero
+        if (initialDistance === 0) return;
 
+        // Calculate new zoom level
         let scaleFactor = currentDistance / initialDistance;
         let newZoomLevel = zoomAtPinchStart * scaleFactor;
         newZoomLevel = Math.max(0.1, Math.min(10, newZoomLevel)); // Clamp zoom
-
         setZoom(newZoomLevel);
 
-        // Adjust pan to keep the content centered at the pinch midpoint
-        // This logic is similar to the mouse wheel zoom adjustment
+        // Calculate new pan to keep worldMidpointAtPinchStart under currentScreenMidpoint
         const { clientWidth, clientHeight } = svgRef.current;
         const gap = finalOptions.unit;
 
-        // Calculate the world coordinates of the screenMidpointAtPinchStart
-        // using the newZoomLevel but the *current/old* pan state.
-        const pointerAfterZoom_X =
-          (screenMidpointAtPinchStart.x - clientWidth / 2) /
-            (gap * newZoomLevel) -
-          pan.x;
-        const pointerAfterZoom_Y =
-          (clientHeight / 2 - screenMidpointAtPinchStart.y) /
-            (gap * newZoomLevel) -
-          pan.y;
+        // Target pan.x such that:
+        // worldMidpointAtPinchStart.x = (currentScreenMidpoint.x - clientWidth / 2) / (gap * newZoomLevel) - newPanX
+        const newPanX =
+          (currentScreenMidpoint.x - clientWidth / 2) / (gap * newZoomLevel) -
+          worldMidpointAtPinchStart.x;
 
-        // Calculate the difference needed to align this with the original worldMidpointAtPinchStart
-        const panAdjustmentX = pointerAfterZoom_X - worldMidpointAtPinchStart.x;
-        const panAdjustmentY = pointerAfterZoom_Y - worldMidpointAtPinchStart.y;
+        // Target pan.y such that:
+        // worldMidpointAtPinchStart.y = (clientHeight / 2 - currentScreenMidpoint.y) / (gap * newZoomLevel) - newPanY
+        const newPanY =
+          (clientHeight / 2 - currentScreenMidpoint.y) / (gap * newZoomLevel) -
+          worldMidpointAtPinchStart.y;
 
-        setPan((currentPan) => ({
-          x: currentPan.x + panAdjustmentX,
-          y: currentPan.y + panAdjustmentY,
-        }));
+        setPan({ x: newPanX, y: newPanY });
       }
     },
     [
@@ -281,10 +277,10 @@ export default function Board({ children, options, ...props }: Props) {
       screenToWorldLength,
       setPan,
       finalOptions.unit,
-      pan, // pan is needed for pan adjustment calculation
+      // pan and zoom state are not direct dependencies for the 2-finger calculation logic itself,
+      // as it uses values from pinchStateRef (based on initial pan/zoom) and calculates new absolute pan/zoom.
+      // screenToWorld is used by handleTouchStart which sets up pinchStateRef.
       setZoom,
-      screenToWorld, // screenToWorld is used in handleTouchStart via pinchStateRef setup
-      zoom, // zoom is used in handleTouchStart via pinchStateRef setup
     ]
   );
 
