@@ -1,10 +1,32 @@
 import { useState } from "react";
 import katex from "katex";
-import Board from "./Board";
+import Board, { type BoardOptions } from "./Board";
+import { type GridOptions } from "./Grid";
+
 import Point from "./Point";
 import Line from "./Line";
 import FunctionPlot from "./FunctionPlot";
 import Grid from "./Grid";
+
+const boardOptions: Partial<BoardOptions> = {
+  unit: 50,
+};
+
+const gridOptions: Partial<GridOptions> = {
+  xRange: [-10, 10],
+  yRange: [-10, 10],
+  grid: {
+    visible: true,
+    stroke: "#ccc",
+    strokeWidth: 0.5,
+    gap: 1,
+  },
+  axes: {
+    visible: true,
+    stroke: "#000",
+    strokeWidth: 1,
+  },
+};
 
 export default function TestScene() {
   const [p1, setP1] = useState({ x: 1, y: 1 });
@@ -21,7 +43,11 @@ export default function TestScene() {
       ((x - p1.x) * (x - p3.x)) / ((p2.x - p1.x) * (p2.x - p3.x));
     const l3 = (x: number) =>
       ((x - p1.x) * (x - p2.x)) / ((p3.x - p1.x) * (p3.x - p2.x));
-    return l1(x) * p1.y + l2(x) * p2.y + l3(x) * p3.y + a;
+    return l1(x) * p1.y + l2(x) * p2.y + l3(x) * p3.y;
+  };
+
+  const quadratic = (x: number) => {
+    return a * (x - p2.x) * (x - p2.x) + p2.y;
   };
 
   return (
@@ -43,28 +69,11 @@ export default function TestScene() {
       </div>
       <Board
         className="w-full h-[500px] border rounded-md bg-white"
-        options={{
-          unit: 50,
-        }}
+        options={boardOptions}
       >
-        <Grid
-          options={{
-            xRange: [-10, 10],
-            yRange: [-10, 10],
-            grid: {
-              visible: true,
-              stroke: "#ccc",
-              strokeWidth: 0.5,
-              gap: 1,
-            },
-            axes: {
-              visible: true,
-              stroke: "#000",
-              strokeWidth: 1,
-            },
-          }}
-        />
+        <Grid options={gridOptions} />
         <FunctionPlot f={polynomial} />
+        <FunctionPlot f={quadratic} />
         <Point
           x={p1.x}
           y={p1.y}

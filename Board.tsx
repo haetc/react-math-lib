@@ -17,7 +17,7 @@ export const boardContext = createContext<BoardContextType>({
   screenToWorldLength: (length) => length,
 });
 
-type BoardOptions = {
+export type BoardOptions = {
   unit: number;
   zoom: {
     enabled: boolean;

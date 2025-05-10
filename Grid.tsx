@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { boardContext } from "./Board";
 
 // TODO: Find a fix for this optional options stuff. It's a mess right now, the user needs to provide all the options
-type GridOptions = {
+export type GridOptions = {
   xRange: [number, number];
   yRange: [number, number];
   grid: {
