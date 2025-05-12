@@ -1,8 +1,9 @@
 import { useContext, useEffect, useState } from "react";
 import { boardContext } from "./Board";
 import Point from "./Point";
+import sampleFunction from "@/util/function-sampler";
 
-type FunctionPlotOptions = {
+export type FunctionPlotOptions = {
   interval: [number, number];
   step: number;
   stroke: string;
@@ -32,16 +33,9 @@ export default function FunctionPlot({ f, options }: Props) {
   // Points are also in screen coords like all internal state
   const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
   useEffect(() => {
-    const points = [];
-    for (
-      let x = finalOptions.interval[0];
-      x <= finalOptions.interval[1];
-      x += finalOptions.step
-    ) {
-      const y = f(x);
-      points.push(worldToScreen(x, y));
-    }
-    setPoints(points);
+    const points = sampleFunction(f, finalOptions.interval, finalOptions.step);
+    const screenPoints = points.map((p) => worldToScreen(p.x, p.y));
+    setPoints(screenPoints);
   }, [f, finalOptions.interval, finalOptions.step, worldToScreen]);
 
   const pathData =

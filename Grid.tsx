@@ -25,7 +25,7 @@ type Props = {
 export default function Grid({ options }: Props) {
   const {
     grid = { visible: true, stroke: "black", strokeWidth: 1, gap: 1 },
-    axes = { visible: true, stroke: "red", strokeWidth: 2 },
+    axes = { visible: true, stroke: "black", strokeWidth: 2 },
     xRange = [-10, 10],
     yRange = [-10, 10],
   } = options ?? {};

@@ -40,15 +40,32 @@ const defaultBoardOptions: BoardOptions = {
 type Props = {
   children: React.ReactNode;
   options?: Partial<BoardOptions>;
+  zoomLevel?: number;
+  panVector?: { x: number; y: number };
 } & React.SVGProps<SVGSVGElement>;
 
-export default function Board({ children, options, ...props }: Props) {
+export default function Board({
+  children,
+  options,
+  zoomLevel,
+  panVector,
+  ...props
+}: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   // Pan is in world coordinates
-  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [pan, setPan] = useState(panVector ?? { x: 0, y: 0 });
   // Zoom is basically a multiplier for the unit
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(zoomLevel ?? 1);
+
+  // Update zoom and pan if props change
+  useEffect(() => {
+    setZoom(zoomLevel ?? 1);
+  }, [zoomLevel]);
+
+  useEffect(() => {
+    setPan(panVector ?? { x: 0, y: 0 });
+  }, [panVector?.x, panVector?.y]);
 
   const finalOptions = {
     ...defaultBoardOptions,
