@@ -63,16 +63,6 @@ export function SlopeDemonstration() {
   return (
     <Board className={boardStyles} options={boardOptions}>
       <Grid options={gridOptions} />
-      <Point
-        // TODO: This point being constrained to a function is a bit of a hack,
-        // Implement constained points by putting them inside the function plot
-        x={x}
-        y={func(x)}
-        options={{
-          draggable: true,
-        }}
-        onDrag={(x) => setX(x)}
-      />
       <FunctionPlot f={func} options={functionPlotOptions} />
       <FunctionPlot
         f={line}
@@ -81,6 +71,13 @@ export function SlopeDemonstration() {
           stroke: "darkblue",
           strokeWidth: 2,
         }}
+      />
+      <Point
+        // TODO: This point being constrained to a function is a bit of a hack,
+        // Implement constained points by putting them inside the function plot
+        x={x}
+        y={func(x)}
+        onDrag={(x) => setX(x)}
       />
     </Board>
   );
