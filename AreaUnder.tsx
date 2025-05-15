@@ -31,6 +31,8 @@ export default function AreaUnder({ interval, options }: Props) {
     interval = [interval[1], interval[0]];
   }
 
+  // TODO: Limit the interval to the function's interval
+
   // If the interval is [a, b], the points will be:
   // (a, 0) (b, 0) (b, f(b)) (a, f(a)) and all the function points between f(a) and f(b)
   const allPoints = [

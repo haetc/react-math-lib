@@ -104,7 +104,7 @@ export default function TestScene() {
         options={boardOptions}
       >
         <Grid options={gridOptions} />
-        <FunctionPlot f={quadratic}>
+        <FunctionPlot f={polynomial}>
           <AreaUnder
             interval={[0, b]}
             options={{
