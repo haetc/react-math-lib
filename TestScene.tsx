@@ -77,11 +77,21 @@ export default function TestScene() {
         <Point
           x={p1.x}
           y={p1.y}
-          options={{ fill: "red" }}
+          options={{ fill: "red", draggable: "x" }}
           onDrag={(x, y) => setP1({ x, y })}
         />
-        <Point x={p2.x} y={p2.y} onDrag={(x, y) => setP2({ x, y })} />
-        <Point x={p3.x} y={p3.y} onDrag={(x, y) => setP3({ x, y })} />
+        <Point
+          x={p2.x}
+          y={p2.y}
+          onDrag={(x, y) => setP2({ x, y })}
+          options={{ draggable: "y" }}
+        />
+        <Point
+          x={p3.x}
+          y={p3.y}
+          onDrag={(x, y) => setP3({ x, y })}
+          options={{ draggable: "both" }}
+        />
       </Board>
     </div>
   );

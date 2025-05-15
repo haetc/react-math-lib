@@ -5,7 +5,7 @@ import { boardContext } from "./Board";
 type PointOptions = {
   fill?: string;
   radius?: number;
-  draggable?: boolean;
+  draggable?: "x" | "y" | "both" | "none";
 };
 
 type Props = {
@@ -20,7 +20,7 @@ export default function Point({ x, y, onDrag, options }: Props) {
     useContext(boardContext);
   const circleRef = useRef<SVGCircleElement>(null);
 
-  const { fill = "black", radius = 5, draggable = true } = options ?? {};
+  const { fill = "black", radius = 5, draggable = "both" } = options ?? {};
 
   // Define a hitbox radius to make the point easier to drag
   const hitboxRadius = Math.max(radius + 10, 10);
@@ -40,7 +40,7 @@ export default function Point({ x, y, onDrag, options }: Props) {
 
   const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
   const handleTouchStart = (event: React.TouchEvent<SVGCircleElement>) => {
-    if (!draggable || event.touches.length !== 1) return;
+    if (draggable === "none" || event.touches.length !== 1) return;
     event.stopPropagation(); // Prevent board panning
     event.preventDefault(); // Prevent page scrolling/zooming during drag
     setIsDragging(true);
@@ -55,8 +55,14 @@ export default function Point({ x, y, onDrag, options }: Props) {
     const handleMouseMove = (event: MouseEvent) => {
       if (isDragging) {
         // Transform the movement vector to world coordinates
-        const movementX = screenToWorldLength(event.movementX);
-        const movementY = -screenToWorldLength(event.movementY);
+        const movementX =
+          draggable === "both" || draggable === "x"
+            ? screenToWorldLength(event.movementX)
+            : 0;
+        const movementY =
+          draggable === "both" || draggable === "y"
+            ? -screenToWorldLength(event.movementY)
+            : 0;
 
         setLiveCoords((prev) => {
           const newCoords = {
@@ -80,12 +86,14 @@ export default function Point({ x, y, onDrag, options }: Props) {
       if (isDragging && event.touches.length === 1 && lastTouchRef.current) {
         event.preventDefault();
         const touch = event.touches[0];
-        const movementX = screenToWorldLength(
-          touch.clientX - lastTouchRef.current.x
-        );
-        const movementY = -screenToWorldLength(
-          touch.clientY - lastTouchRef.current.y
-        );
+        const movementX =
+          draggable === "both" || draggable === "x"
+            ? screenToWorldLength(touch.clientX - lastTouchRef.current.x)
+            : 0;
+        const movementY =
+          draggable === "both" || draggable === "y"
+            ? -screenToWorldLength(touch.clientY - lastTouchRef.current.y)
+            : 0;
 
         setLiveCoords((prev) => {
           const newCoords = {
@@ -135,7 +143,7 @@ export default function Point({ x, y, onDrag, options }: Props) {
         fill={fill}
         ref={circleRef}
       />
-      {draggable && (
+      {draggable !== "none" && (
         // The invisible circle on top of the visual circle
         // This is the actual circle that handles the events
         <circle
