@@ -9,6 +9,7 @@ import FunctionPlot from "./FunctionPlot";
 import Grid from "./Grid";
 import Glider from "./Glider";
 import AreaUnder from "./AreaUnder";
+import Vector from "./Vector";
 
 const boardOptions: Partial<BoardOptions> = {
   unit: 50,
@@ -37,6 +38,7 @@ export default function TestScene() {
   const [a, setA] = useState(0.5);
 
   const [b, setB] = useState(3);
+  const [v, setV] = useState({ x: 1, y: 1 });
 
   const polynomial = (x: number) => {
     // The polynomial that passes through the three given points
@@ -115,6 +117,12 @@ export default function TestScene() {
           />
           <Glider x={b} onDrag={(x) => setB(x)} />
         </FunctionPlot>
+        <Vector x={v.x} y={v.y} onDrag={(x, y) => setV({ x, y })} />
+        <Vector
+          x={v.x * 2 + v.y}
+          y={v.y - v.x}
+          options={{ draggable: "none" }}
+        />
       </Board>
     </div>
   );

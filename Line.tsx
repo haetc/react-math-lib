@@ -4,11 +4,13 @@ import { boardContext } from "./Board";
 type LineOptions = {
   stroke?: string;
   strokeWidth?: number;
+  markerEnd?: string;
 };
 
 const defaultLineOptions: LineOptions = {
   stroke: "black",
   strokeWidth: 1,
+  markerEnd: undefined,
 };
 
 type Props = {
@@ -37,6 +39,7 @@ export default function Line({ from, to, options }: Props) {
       y2={screenTo.y}
       stroke={finalOptions.stroke}
       strokeWidth={finalOptions.strokeWidth}
+      markerEnd={finalOptions.markerEnd}
     />
   );
 }

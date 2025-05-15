@@ -1,7 +1,7 @@
 import type { PointOptions } from "./Point";
 import Point from "./Point";
 import { functionPlotContext } from "./FunctionPlot";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 type GliderOptions = Omit<PointOptions, "draggable">;
 
@@ -20,6 +20,10 @@ export default function Glider({ x, onDrag, options }: Props) {
   }
 
   const [xValue, setXValue] = useState(x);
+  useEffect(() => {
+    setXValue(x);
+  }, [x]);
+
   const y = f(xValue);
 
   return (
