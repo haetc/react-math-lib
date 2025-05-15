@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { useEffect, useRef, useState } from "react";
 import { boardContext } from "./Board";
 
-type PointOptions = {
+export type PointOptions = {
   fill?: string;
   radius?: number;
   draggable?: "x" | "y" | "both" | "none";

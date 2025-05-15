@@ -1,7 +1,18 @@
-import { useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { boardContext } from "./Board";
 import Point from "./Point";
 import sampleFunction from "@/util/function-sampler";
+
+type FunctionPlotContextType = {
+  points: { x: number; y: number }[];
+  f?: (x: number) => number;
+};
+
+export const functionPlotContext = createContext<FunctionPlotContextType>({
+  // Points are in world coordinates
+  points: [],
+  f: undefined,
+});
 
 export type FunctionPlotOptions = {
   interval: [number, number];
@@ -20,9 +31,10 @@ const defaultFunctionPlotOptions: FunctionPlotOptions = {
 type Props = {
   f: (x: number) => number;
   options?: Partial<FunctionPlotOptions>;
+  children?: React.ReactNode;
 };
 
-export default function FunctionPlot({ f, options }: Props) {
+export default function FunctionPlot({ f, options, children }: Props) {
   const { worldToScreenLength, worldToScreen } = useContext(boardContext);
 
   const finalOptions = {
@@ -30,29 +42,34 @@ export default function FunctionPlot({ f, options }: Props) {
     ...options,
   };
 
-  // Points are also in screen coords like all internal state
+  // Points are in world coords
   const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
   useEffect(() => {
     const points = sampleFunction(f, finalOptions.interval, finalOptions.step);
-    const screenPoints = points.map((p) => worldToScreen(p.x, p.y));
-    setPoints(screenPoints);
+    setPoints(points);
   }, [f, finalOptions.interval, finalOptions.step, worldToScreen]);
 
+  // Converted to screen coords here for rendering
+  const screenPoints = points.map((p) => worldToScreen(p.x, p.y));
+
   const pathData =
-    points.length > 0
-      ? `M ${points[0].x},${points[0].y} ` +
-        points
+    screenPoints.length > 0
+      ? `M ${screenPoints[0].x},${screenPoints[0].y} ` +
+        screenPoints
           .slice(1)
           .map((p) => `L ${p.x},${p.y}`)
           .join(" ")
       : "";
 
   return (
-    <path
-      fill="none"
-      stroke={finalOptions.stroke}
-      strokeWidth={finalOptions.strokeWidth}
-      d={pathData}
-    />
+    <functionPlotContext.Provider value={{ points, f }}>
+      <path
+        fill="none"
+        stroke={finalOptions.stroke}
+        strokeWidth={finalOptions.strokeWidth}
+        d={pathData}
+      />
+      {children}
+    </functionPlotContext.Provider>
   );
 }

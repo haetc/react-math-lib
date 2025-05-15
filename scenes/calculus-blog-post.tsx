@@ -78,6 +78,7 @@ export function SlopeDemonstration() {
         x={x}
         y={func(x)}
         onDrag={(x) => setX(x)}
+        options={{ draggable: "x" }}
       />
     </Board>
   );

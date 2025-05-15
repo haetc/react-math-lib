@@ -7,6 +7,7 @@ import Point from "./Point";
 import Line from "./Line";
 import FunctionPlot from "./FunctionPlot";
 import Grid from "./Grid";
+import Glider from "./Glider";
 
 const boardOptions: Partial<BoardOptions> = {
   unit: 50,
@@ -73,7 +74,9 @@ export default function TestScene() {
       >
         <Grid options={gridOptions} />
         <FunctionPlot f={polynomial} />
-        <FunctionPlot f={quadratic} />
+        <FunctionPlot f={quadratic}>
+          <Glider x={0} />
+        </FunctionPlot>
         <Point
           x={p1.x}
           y={p1.y}
