@@ -217,6 +217,8 @@ export default function Board({
       event.preventDefault();
 
       // Panning with one finger
+      // TODO: Add an option to enable or disable single finger panning
+      // because it might interfere with user scrolling through the page
       if (
         event.touches.length === 1 &&
         isPanning &&

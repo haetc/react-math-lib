@@ -72,47 +72,54 @@ export default function Point({ x, y, onDrag, options }: Props) {
   };
 
   useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      if (isDragging && dragOffsetRef.current) {
-        const worldMouse = screenToWorld(event.clientX, event.clientY);
+    const processPointerMove = (
+      pointerClientX: number,
+      pointerClientY: number
+    ) => {
+      if (!isDragging || !dragOffsetRef.current) return;
 
-        let intendedX = worldMouse.x + dragOffsetRef.current.x;
-        let intendedY = worldMouse.y + dragOffsetRef.current.y;
+      const worldPointer = screenToWorld(pointerClientX, pointerClientY);
 
-        let finalTargetX, finalTargetY;
+      let intendedX = worldPointer.x + dragOffsetRef.current.x;
+      let intendedY = worldPointer.y + dragOffsetRef.current.y;
 
-        if (draggable === "both") {
-          finalTargetX = intendedX;
-          finalTargetY = intendedY;
-        } else if (draggable === "x") {
-          finalTargetX = intendedX;
-          finalTargetY = liveCoordsRef.current.y; // Keep current Y
-        } else if (draggable === "y") {
-          finalTargetX = liveCoordsRef.current.x; // Keep current X
-          finalTargetY = intendedY;
-        } else {
-          return; // Should not happen
-        }
+      let finalTargetX, finalTargetY;
 
-        setLiveCoords(() => {
-          let finalX = finalTargetX;
-          let finalY = finalTargetY;
-
-          if (snapToGrid) {
-            const roundedX = Math.round(finalTargetX);
-            const roundedY = Math.round(finalTargetY);
-            if (
-              Math.abs(finalTargetX - roundedX) < SNAP_THRESHOLD &&
-              Math.abs(finalTargetY - roundedY) < SNAP_THRESHOLD
-            ) {
-              finalX = roundedX;
-              finalY = roundedY;
-            }
-          }
-          onDrag?.(finalX, finalY);
-          return { x: finalX, y: finalY };
-        });
+      if (draggable === "both") {
+        finalTargetX = intendedX;
+        finalTargetY = intendedY;
+      } else if (draggable === "x") {
+        finalTargetX = intendedX;
+        finalTargetY = liveCoordsRef.current.y; // Keep current Y
+      } else if (draggable === "y") {
+        finalTargetX = liveCoordsRef.current.x; // Keep current X
+        finalTargetY = intendedY;
+      } else {
+        return; // Should not happen
       }
+
+      setLiveCoords(() => {
+        let finalX = finalTargetX;
+        let finalY = finalTargetY;
+
+        if (snapToGrid) {
+          const roundedX = Math.round(finalTargetX);
+          const roundedY = Math.round(finalTargetY);
+          if (
+            Math.abs(finalTargetX - roundedX) < SNAP_THRESHOLD &&
+            Math.abs(finalTargetY - roundedY) < SNAP_THRESHOLD
+          ) {
+            finalX = roundedX;
+            finalY = roundedY;
+          }
+        }
+        onDrag?.(finalX, finalY);
+        return { x: finalX, y: finalY };
+      });
+    };
+
+    const handleMouseMove = (event: MouseEvent) => {
+      processPointerMove(event.clientX, event.clientY);
     };
 
     const handleMouseUp = () => {
@@ -124,47 +131,10 @@ export default function Point({ x, y, onDrag, options }: Props) {
     };
 
     const handleTouchMove = (event: TouchEvent) => {
-      if (isDragging && dragOffsetRef.current && event.touches.length === 1) {
+      if (isDragging && event.touches.length === 1) {
         event.preventDefault();
         const touch = event.touches[0];
-        const worldTouch = screenToWorld(touch.clientX, touch.clientY);
-
-        let intendedX = worldTouch.x + dragOffsetRef.current.x;
-        let intendedY = worldTouch.y + dragOffsetRef.current.y;
-
-        let finalTargetX, finalTargetY;
-
-        if (draggable === "both") {
-          finalTargetX = intendedX;
-          finalTargetY = intendedY;
-        } else if (draggable === "x") {
-          finalTargetX = intendedX;
-          finalTargetY = liveCoordsRef.current.y; // Keep current Y
-        } else if (draggable === "y") {
-          finalTargetX = liveCoordsRef.current.x; // Keep current X
-          finalTargetY = intendedY;
-        } else {
-          return; // Should not happen
-        }
-
-        setLiveCoords(() => {
-          let finalX = finalTargetX;
-          let finalY = finalTargetY;
-
-          if (snapToGrid) {
-            const roundedX = Math.round(finalTargetX);
-            const roundedY = Math.round(finalTargetY);
-            if (
-              Math.abs(finalTargetX - roundedX) < SNAP_THRESHOLD &&
-              Math.abs(finalTargetY - roundedY) < SNAP_THRESHOLD
-            ) {
-              finalX = roundedX;
-              finalY = roundedY;
-            }
-          }
-          onDrag?.(finalX, finalY);
-          return { x: finalX, y: finalY };
-        });
+        processPointerMove(touch.clientX, touch.clientY);
       }
     };
 
