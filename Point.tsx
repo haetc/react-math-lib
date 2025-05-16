@@ -6,6 +6,7 @@ export type PointOptions = {
   fill?: string;
   radius?: number;
   draggable?: "x" | "y" | "both" | "none";
+  snapToGrid?: boolean;
 };
 
 type Props = {
@@ -20,13 +21,26 @@ export default function Point({ x, y, onDrag, options }: Props) {
     useContext(boardContext);
   const circleRef = useRef<SVGCircleElement>(null);
 
-  const { fill = "black", radius = 5, draggable = "both" } = options ?? {};
+  const {
+    fill = "black",
+    radius = 5,
+    draggable = "both",
+    snapToGrid = false,
+  } = options ?? {};
 
   // Define a hitbox radius to make the point easier to drag
   const hitboxRadius = Math.max(radius + 10, 10);
+  const SNAP_THRESHOLD = 0.2;
 
   // Live coords are handled in world coordinates
   const [liveCoords, setLiveCoords] = useState({ x, y });
+  const liveCoordsRef = useRef(liveCoords); // Ref to access latest liveCoords in event handlers
+  const dragOffsetRef = useRef<{ x: number; y: number } | null>(null); // Ref for drag offset
+
+  useEffect(() => {
+    liveCoordsRef.current = liveCoords;
+  }, [liveCoords]);
+
   useEffect(() => {
     setLiveCoords({ x, y });
   }, [x, y]);
@@ -34,43 +48,69 @@ export default function Point({ x, y, onDrag, options }: Props) {
   const [isDragging, setIsDragging] = useState(false);
   const handleMouseDown = (event: React.MouseEvent<SVGCircleElement>) => {
     event.stopPropagation();
+    const worldClickPos = screenToWorld(event.clientX, event.clientY);
+    dragOffsetRef.current = {
+      x: liveCoordsRef.current.x - worldClickPos.x,
+      y: liveCoordsRef.current.y - worldClickPos.y,
+    };
     setIsDragging(true);
     svg?.style.setProperty("cursor", "grabbing");
   };
 
-  const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
   const handleTouchStart = (event: React.TouchEvent<SVGCircleElement>) => {
     if (draggable === "none" || event.touches.length !== 1) return;
     event.stopPropagation(); // Prevent board panning
     event.preventDefault(); // Prevent page scrolling/zooming during drag
-    setIsDragging(true);
-    lastTouchRef.current = {
-      x: event.touches[0].clientX,
-      y: event.touches[0].clientY,
+    const touch = event.touches[0];
+    const worldTouchPos = screenToWorld(touch.clientX, touch.clientY);
+    dragOffsetRef.current = {
+      x: liveCoordsRef.current.x - worldTouchPos.x,
+      y: liveCoordsRef.current.y - worldTouchPos.y,
     };
+    setIsDragging(true);
     svg?.style.setProperty("cursor", "grabbing");
   };
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
-      if (isDragging) {
-        // Transform the movement vector to world coordinates
-        const movementX =
-          draggable === "both" || draggable === "x"
-            ? screenToWorldLength(event.movementX)
-            : 0;
-        const movementY =
-          draggable === "both" || draggable === "y"
-            ? -screenToWorldLength(event.movementY)
-            : 0;
+      if (isDragging && dragOffsetRef.current) {
+        const worldMouse = screenToWorld(event.clientX, event.clientY);
 
-        setLiveCoords((prev) => {
-          const newCoords = {
-            x: prev.x + movementX,
-            y: prev.y + movementY,
-          };
-          onDrag?.(newCoords.x, newCoords.y);
-          return newCoords;
+        let intendedX = worldMouse.x + dragOffsetRef.current.x;
+        let intendedY = worldMouse.y + dragOffsetRef.current.y;
+
+        let finalTargetX, finalTargetY;
+
+        if (draggable === "both") {
+          finalTargetX = intendedX;
+          finalTargetY = intendedY;
+        } else if (draggable === "x") {
+          finalTargetX = intendedX;
+          finalTargetY = liveCoordsRef.current.y; // Keep current Y
+        } else if (draggable === "y") {
+          finalTargetX = liveCoordsRef.current.x; // Keep current X
+          finalTargetY = intendedY;
+        } else {
+          return; // Should not happen
+        }
+
+        setLiveCoords(() => {
+          let finalX = finalTargetX;
+          let finalY = finalTargetY;
+
+          if (snapToGrid) {
+            const roundedX = Math.round(finalTargetX);
+            const roundedY = Math.round(finalTargetY);
+            if (
+              Math.abs(finalTargetX - roundedX) < SNAP_THRESHOLD &&
+              Math.abs(finalTargetY - roundedY) < SNAP_THRESHOLD
+            ) {
+              finalX = roundedX;
+              finalY = roundedY;
+            }
+          }
+          onDrag?.(finalX, finalY);
+          return { x: finalX, y: finalY };
         });
       }
     };
@@ -79,31 +119,52 @@ export default function Point({ x, y, onDrag, options }: Props) {
       if (isDragging) {
         setIsDragging(false);
         svg?.style.setProperty("cursor", "unset");
+        dragOffsetRef.current = null;
       }
     };
 
     const handleTouchMove = (event: TouchEvent) => {
-      if (isDragging && event.touches.length === 1 && lastTouchRef.current) {
+      if (isDragging && dragOffsetRef.current && event.touches.length === 1) {
         event.preventDefault();
         const touch = event.touches[0];
-        const movementX =
-          draggable === "both" || draggable === "x"
-            ? screenToWorldLength(touch.clientX - lastTouchRef.current.x)
-            : 0;
-        const movementY =
-          draggable === "both" || draggable === "y"
-            ? -screenToWorldLength(touch.clientY - lastTouchRef.current.y)
-            : 0;
+        const worldTouch = screenToWorld(touch.clientX, touch.clientY);
 
-        setLiveCoords((prev) => {
-          const newCoords = {
-            x: prev.x + movementX,
-            y: prev.y + movementY,
-          };
-          onDrag?.(newCoords.x, newCoords.y);
-          return newCoords;
+        let intendedX = worldTouch.x + dragOffsetRef.current.x;
+        let intendedY = worldTouch.y + dragOffsetRef.current.y;
+
+        let finalTargetX, finalTargetY;
+
+        if (draggable === "both") {
+          finalTargetX = intendedX;
+          finalTargetY = intendedY;
+        } else if (draggable === "x") {
+          finalTargetX = intendedX;
+          finalTargetY = liveCoordsRef.current.y; // Keep current Y
+        } else if (draggable === "y") {
+          finalTargetX = liveCoordsRef.current.x; // Keep current X
+          finalTargetY = intendedY;
+        } else {
+          return; // Should not happen
+        }
+
+        setLiveCoords(() => {
+          let finalX = finalTargetX;
+          let finalY = finalTargetY;
+
+          if (snapToGrid) {
+            const roundedX = Math.round(finalTargetX);
+            const roundedY = Math.round(finalTargetY);
+            if (
+              Math.abs(finalTargetX - roundedX) < SNAP_THRESHOLD &&
+              Math.abs(finalTargetY - roundedY) < SNAP_THRESHOLD
+            ) {
+              finalX = roundedX;
+              finalY = roundedY;
+            }
+          }
+          onDrag?.(finalX, finalY);
+          return { x: finalX, y: finalY };
         });
-        lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
       }
     };
 
@@ -112,7 +173,7 @@ export default function Point({ x, y, onDrag, options }: Props) {
         if (event.touches.length === 0) {
           setIsDragging(false);
           svg?.style.setProperty("cursor", "unset");
-          lastTouchRef.current = null;
+          dragOffsetRef.current = null;
           event.preventDefault();
         }
       }
@@ -128,7 +189,7 @@ export default function Point({ x, y, onDrag, options }: Props) {
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [isDragging, screenToWorldLength, onDrag, svg, draggable]); // Added screenToWorldLength, onDrag, svg, draggable to deps
+  }, [isDragging, screenToWorld, draggable, snapToGrid, onDrag, svg]);
 
   // Conversion to screen coords for rendering
   const screenCoords = worldToScreen(liveCoords.x, liveCoords.y);

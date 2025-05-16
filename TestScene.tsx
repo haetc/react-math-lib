@@ -123,6 +123,11 @@ export default function TestScene() {
           y={v.y - v.x}
           options={{ draggable: "none" }}
         />
+        <Point
+          x={0}
+          y={0}
+          options={{ fill: "red", draggable: "both", snapToGrid: true }}
+        />
       </Board>
     </div>
   );
