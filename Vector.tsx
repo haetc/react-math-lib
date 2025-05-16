@@ -6,6 +6,7 @@ type VectorOptions = {
   stroke?: string;
   strokeWidth?: number;
   draggable?: "x" | "y" | "both" | "none";
+  snapToGrid?: boolean;
 };
 
 type Props = {
@@ -27,6 +28,7 @@ export default function Vector({
     stroke = "black",
     strokeWidth = 1,
     draggable = "both",
+    snapToGrid = false,
   } = options ?? {};
 
   const [to, setTo] = useState({
@@ -66,7 +68,12 @@ export default function Vector({
           setTo({ x, y });
           onDrag?.(x, y);
         }}
-        options={{ draggable, fill: "none", radius: 0 }}
+        options={{
+          draggable,
+          fill: "none",
+          radius: 0,
+          snapToGrid,
+        }}
       />
     </>
   );

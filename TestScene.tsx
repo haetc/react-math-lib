@@ -117,7 +117,12 @@ export default function TestScene() {
           />
           <Glider x={b} onDrag={(x) => setB(x)} />
         </FunctionPlot>
-        <Vector x={v.x} y={v.y} onDrag={(x, y) => setV({ x, y })} />
+        <Vector
+          x={v.x}
+          y={v.y}
+          onDrag={(x, y) => setV({ x, y })}
+          options={{ snapToGrid: true }}
+        />
         <Vector
           x={v.x * 2 + v.y}
           y={v.y - v.x}
