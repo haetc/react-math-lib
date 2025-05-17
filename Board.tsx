@@ -1,4 +1,14 @@
-import { createContext, useCallback, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  Children,
+  isValidElement,
+} from "react";
+
+import Overlay from "./Overlay";
 
 // TODO: Maybe create two disctinct types for WorldCoords and ScreenCoords
 type BoardContextType = {
@@ -393,6 +403,27 @@ export default function Board({
     return () => svgElement.removeEventListener("wheel", wheelListener);
   }, [handleWheel]);
 
+  // Split children into SVG and overlay
+  const allChildren = Children.toArray(children);
+  const overlayEls = allChildren.filter(
+    (child) => isValidElement(child) && child.type === Overlay
+  );
+  if (overlayEls.length > 1) {
+    throw new Error("Board only accepts one <Overlay> child");
+  }
+  const overlayChildren = overlayEls;
+  const svgChildren =
+    overlayEls.length === 1
+      ? allChildren.filter((child) => child !== overlayEls[0])
+      : allChildren;
+
+  // Extract wrapper props from svg props
+  const {
+    className: wrapperClassName,
+    style: wrapperStyle,
+    ...svgProps
+  } = props;
+
   return (
     <boardContext.Provider
       value={{
@@ -403,20 +434,25 @@ export default function Board({
         screenToWorldLength,
       }}
     >
-      <svg
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        ref={svgRef}
-        {...props}
-        // The touchAction is needed to prevent the page from scrolling when panning the board
-        style={{ touchAction: "none", ...props.style }}
+      <div
+        className={wrapperClassName}
+        style={{ position: "relative", ...wrapperStyle }}
       >
-        {children}
-      </svg>
+        <svg
+          ref={svgRef}
+          {...svgProps}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ touchAction: "none", width: "100%", height: "100%" }}
+        >
+          {svgChildren}
+        </svg>
+        {overlayChildren}
+      </div>
     </boardContext.Provider>
   );
 }

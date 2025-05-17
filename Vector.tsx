@@ -33,6 +33,8 @@ export default function Vector({
     arrowScale = 1,
   } = options ?? {};
 
+  // TODO: When the base is changed, the tip of the vector resets to its props
+  // Fix this to make the top also move with the base
   const [to, setTo] = useState({
     x: base.x + x,
     y: base.y + y,

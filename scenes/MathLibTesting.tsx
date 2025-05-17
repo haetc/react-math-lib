@@ -8,6 +8,7 @@ import FunctionPlot from "../FunctionPlot";
 import Glider from "../Glider";
 import AreaUnder from "../AreaUnder";
 import Vector from "../Vector";
+import Overlay from "../Overlay";
 
 const boardOptions: Partial<BoardOptions> = {
   unit: 50,
@@ -49,13 +50,6 @@ export function Scene1() {
         value={a}
         onChange={(e) => setA(+e.target.value)}
       />
-      <div>
-        <span
-          dangerouslySetInnerHTML={{
-            __html: katex.renderToString("a = " + a),
-          }}
-        />
-      </div>
       <Board
         className="w-full h-[500px] border rounded-md bg-white"
         options={boardOptions}
@@ -95,6 +89,15 @@ export function Scene1() {
             snapToGrid: true,
           }}
         />
+
+        {/* Example of how the overlay component might be used */}
+        <Overlay className="p-4 [&_*]:pointer-events-auto">
+          <span
+            dangerouslySetInnerHTML={{
+              __html: katex.renderToString("a = " + a),
+            }}
+          />
+        </Overlay>
       </Board>
     </div>
   );
