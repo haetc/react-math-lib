@@ -70,7 +70,7 @@ export function Scene1() {
       />
       <Point x={p2.x} y={p2.y} onDrag={(x, y) => setP2({ x, y })} />
       <Vector
-        x={1}
+        x={1 + a}
         y={1}
         base={{ x: t1, y: 0 }}
         options={{
