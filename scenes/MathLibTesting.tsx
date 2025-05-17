@@ -81,7 +81,6 @@ export function Scene1() {
         }}
       />
 
-      {/* Example of how the overlay component might be used */}
       <Overlay className="p-4 [&_*]:pointer-events-auto">
         <div className="flex flex-col gap-2 w-48 px-4 py-2 bg-neutral-50 border rounded-md">
           <span

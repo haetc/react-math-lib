@@ -33,18 +33,25 @@ export default function Vector({
     arrowScale = 1,
   } = options ?? {};
 
-  // TODO: When the base is changed, the tip of the vector resets to its props
-  // Fix this to make the top also move with the base
-  const [to, setTo] = useState({
-    x: base.x + x,
-    y: base.y + y,
-  });
+  const [coords, setCoords] = useState({ x, y });
   useEffect(() => {
-    setTo({
-      x: base.x + x,
-      y: base.y + y,
-    });
-  }, [base, x, y]);
+    setCoords({ x, y });
+  }, [x, y]);
+
+  const tip = {
+    x: base.x + coords.x,
+    y: base.y + coords.y,
+  };
+
+  function handleDrag(x: number, y: number) {
+    // Calculate new coords based on the new tip position
+    const newCoords = {
+      x: x - base.x,
+      y: y - base.y,
+    };
+    setCoords(newCoords);
+    onDrag?.(newCoords.x, newCoords.y);
+  }
 
   return (
     <>
@@ -67,16 +74,13 @@ export default function Vector({
       </defs>
       <Line
         from={base}
-        to={to}
+        to={tip}
         options={{ stroke, strokeWidth, markerEnd: "url(#arrowhead)" }}
       />
       <Point
-        x={to.x}
-        y={to.y}
-        onDrag={(x, y) => {
-          setTo({ x, y });
-          onDrag?.(x, y);
-        }}
+        x={tip.x}
+        y={tip.y}
+        onDrag={(x, y) => handleDrag(x, y)}
         options={{
           draggable,
           fill: "none",
