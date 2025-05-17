@@ -48,12 +48,12 @@ export default function Vector({
         <marker
           id="arrowhead"
           markerWidth="10"
-          markerHeight="7"
-          refX="0"
-          refY="3.5"
+          markerHeight="10"
+          refX="5"
+          refY="4"
           orient="auto"
         >
-          <path d="M 0 0 L 10 3.5 L 0 7 z" fill={stroke} />
+          <path d="M 0 0 L 10 4 L 0 8 z" fill={stroke} />
         </marker>
       </defs>
       <Line
