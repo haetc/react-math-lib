@@ -7,6 +7,7 @@ type VectorOptions = {
   strokeWidth?: number;
   draggable?: "x" | "y" | "both" | "none";
   snapToGrid?: boolean;
+  arrowScale?: number;
 };
 
 type Props = {
@@ -29,6 +30,7 @@ export default function Vector({
     strokeWidth = 1,
     draggable = "both",
     snapToGrid = false,
+    arrowScale = 1,
   } = options ?? {};
 
   const [to, setTo] = useState({
@@ -47,13 +49,18 @@ export default function Vector({
       <defs>
         <marker
           id="arrowhead"
-          markerWidth="10"
-          markerHeight="10"
-          refX="5"
-          refY="4"
+          markerWidth={10 * arrowScale}
+          markerHeight={10 * arrowScale}
+          refX={5 * arrowScale}
+          refY={4 * arrowScale}
           orient="auto"
         >
-          <path d="M 0 0 L 10 4 L 0 8 z" fill={stroke} />
+          <path
+            d={`M 0 0 L ${10 * arrowScale} ${4 * arrowScale} L 0 ${
+              8 * arrowScale
+            } z`}
+            fill={stroke}
+          />
         </marker>
       </defs>
       <Line
