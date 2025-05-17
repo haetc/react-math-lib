@@ -17,8 +17,13 @@ type Props = {
 };
 
 export default function Point({ x, y, onDrag, options }: Props) {
-  const { svg, worldToScreen, screenToWorld, screenToWorldLength } =
-    useContext(boardContext);
+  const {
+    svg,
+    worldToScreen,
+    screenToWorld,
+    screenToWorldLength,
+    setIsDraggingSomething,
+  } = useContext(boardContext);
   const circleRef = useRef<SVGCircleElement>(null);
 
   const {
@@ -54,6 +59,7 @@ export default function Point({ x, y, onDrag, options }: Props) {
       y: liveCoordsRef.current.y - worldClickPos.y,
     };
     setIsDragging(true);
+    setIsDraggingSomething(true);
     svg?.style.setProperty("cursor", "grabbing");
   };
 
@@ -68,6 +74,7 @@ export default function Point({ x, y, onDrag, options }: Props) {
       y: liveCoordsRef.current.y - worldTouchPos.y,
     };
     setIsDragging(true);
+    setIsDraggingSomething(true);
     svg?.style.setProperty("cursor", "grabbing");
   };
 
@@ -125,6 +132,7 @@ export default function Point({ x, y, onDrag, options }: Props) {
     const handleMouseUp = () => {
       if (isDragging) {
         setIsDragging(false);
+        setIsDraggingSomething(false);
         svg?.style.setProperty("cursor", "unset");
         dragOffsetRef.current = null;
       }
@@ -142,6 +150,7 @@ export default function Point({ x, y, onDrag, options }: Props) {
       if (isDragging) {
         if (event.touches.length === 0) {
           setIsDragging(false);
+          setIsDraggingSomething(false);
           svg?.style.setProperty("cursor", "unset");
           dragOffsetRef.current = null;
           event.preventDefault();

@@ -1,3 +1,6 @@
+import { useContext } from "react";
+import { boardContext } from "./Board";
+
 export type Props = {
   children: React.ReactNode;
   className?: string;
@@ -5,9 +8,15 @@ export type Props = {
 };
 
 export default function Overlay({ children, className, style }: Props) {
+  const { isDraggingSomething } = useContext(boardContext);
+
   return (
     <div
-      className={className}
+      className={`${className} ${
+        isDraggingSomething
+          ? "[&_*]:pointer-events-none"
+          : "[&_*]:pointer-events-auto"
+      }`}
       style={{
         position: "absolute",
         top: 0,
@@ -18,6 +27,10 @@ export default function Overlay({ children, className, style }: Props) {
         ...style,
       }}
     >
+      {/* Debug */}
+      {/* <span className="text-red-500">
+        {isDraggingSomething ? "Dragging" : "Not dragging"}
+      </span> */}
       {children}
     </div>
   );

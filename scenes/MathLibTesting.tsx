@@ -41,64 +41,64 @@ export function Scene1() {
   const [t2, setT2] = useState(1);
 
   return (
-    <div className="flex flex-col gap-4">
-      <input
-        type="range"
-        min={-5}
-        max={5}
-        step={0.01}
-        value={a}
-        onChange={(e) => setA(+e.target.value)}
-      />
-      <Board
-        className="w-full h-[500px] border rounded-md bg-white"
-        options={boardOptions}
-      >
-        <Grid options={gridOptions} />
-        <FunctionPlot f={quadratic}>
-          <AreaUnder
-            interval={[t1, t2]}
-            options={{
-              fill: "rgba(255, 0, 0, 0.1)",
-              stroke: "red",
-              strokeWidth: 2,
-            }}
-          />
-        </FunctionPlot>
-        <Point
-          x={t1}
-          y={0}
-          options={{ draggable: "x" }}
-          onDrag={(x, y) => setT1(x)}
-        />
-        <Point
-          x={t2}
-          y={0}
-          options={{ draggable: "x" }}
-          onDrag={(x, y) => setT2(x)}
-        />
-        <Point x={p2.x} y={p2.y} onDrag={(x, y) => setP2({ x, y })} />
-        <Vector
-          x={1}
-          y={1}
-          base={{ x: t1, y: 0 }}
+    <Board
+      className="w-full h-[500px] border rounded-md bg-white"
+      options={boardOptions}
+    >
+      <Grid options={gridOptions} />
+      <FunctionPlot f={quadratic}>
+        <AreaUnder
+          interval={[t1, t2]}
           options={{
+            fill: "rgba(255, 0, 0, 0.1)",
             stroke: "red",
             strokeWidth: 2,
-            arrowScale: 0.8,
-            snapToGrid: true,
           }}
         />
+      </FunctionPlot>
+      <Point
+        x={t1}
+        y={0}
+        options={{ draggable: "x" }}
+        onDrag={(x, y) => setT1(x)}
+      />
+      <Point
+        x={t2}
+        y={0}
+        options={{ draggable: "x" }}
+        onDrag={(x, y) => setT2(x)}
+      />
+      <Point x={p2.x} y={p2.y} onDrag={(x, y) => setP2({ x, y })} />
+      <Vector
+        x={1}
+        y={1}
+        base={{ x: t1, y: 0 }}
+        options={{
+          stroke: "red",
+          strokeWidth: 2,
+          arrowScale: 0.8,
+          snapToGrid: true,
+        }}
+      />
 
-        {/* Example of how the overlay component might be used */}
-        <Overlay className="p-4 [&_*]:pointer-events-auto">
+      {/* Example of how the overlay component might be used */}
+      <Overlay className="p-4 [&_*]:pointer-events-auto">
+        <div className="flex flex-col gap-2 w-48 px-4 py-2 bg-neutral-50 border rounded-md">
           <span
             dangerouslySetInnerHTML={{
               __html: katex.renderToString("a = " + a),
             }}
           />
-        </Overlay>
-      </Board>
-    </div>
+          <input
+            type="range"
+            min={-5}
+            max={5}
+            step={0.01}
+            value={a}
+            onChange={(e) => setA(+e.target.value)}
+          />
+        </div>
+      </Overlay>
+    </Board>
   );
 }

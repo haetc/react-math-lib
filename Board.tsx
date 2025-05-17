@@ -17,6 +17,8 @@ type BoardContextType = {
   screenToWorld: (x: number, y: number) => { x: number; y: number };
   worldToScreenLength: (length: number) => number;
   screenToWorldLength: (length: number) => number;
+  isDraggingSomething: boolean;
+  setIsDraggingSomething: (isDraggingSomething: boolean) => void;
 };
 
 export const boardContext = createContext<BoardContextType>({
@@ -25,6 +27,8 @@ export const boardContext = createContext<BoardContextType>({
   screenToWorld: (x, y) => ({ x, y }),
   worldToScreenLength: (length) => length,
   screenToWorldLength: (length) => length,
+  isDraggingSomething: false,
+  setIsDraggingSomething: () => {},
 });
 
 export type BoardOptions = {
@@ -67,6 +71,9 @@ export default function Board({
   const [pan, setPan] = useState(panVector ?? { x: 0, y: 0 });
   // Zoom is basically a multiplier for the unit
   const [zoom, setZoom] = useState(zoomLevel ?? 1);
+
+  // This is used to disable pointer events on the overlay when a drag has started on the board
+  const [isDraggingSomething, setIsDraggingSomething] = useState(false);
 
   // Update zoom and pan if props change
   useEffect(() => {
@@ -154,10 +161,12 @@ export default function Board({
   const handleMouseDown = () => {
     if (!finalOptions.pan.enabled) return;
     setIsPanning(true);
+    setIsDraggingSomething(true);
   };
   const handleMouseUp = () => {
     if (!finalOptions.pan.enabled) return;
     setIsPanning(false);
+    setIsDraggingSomething(false);
   };
   const handleMouseMove = useCallback(
     (event: React.MouseEvent<SVGSVGElement>) => {
@@ -190,12 +199,14 @@ export default function Board({
     if (event.touches.length === 1 && finalOptions.pan.enabled) {
       pinchStateRef.current = null; // Ensure not in pinch mode
       setIsPanning(true);
+      setIsDraggingSomething(true);
       lastTouchRef.current = {
         x: event.touches[0].clientX,
         y: event.touches[0].clientY,
       };
     } else if (event.touches.length === 2 && finalOptions.zoom.enabled) {
       setIsPanning(false); // Stop panning if it was active
+      setIsDraggingSomething(true);
       const touch1 = event.touches[0];
       const touch2 = event.touches[1];
 
@@ -324,11 +335,13 @@ export default function Board({
     if (event.touches.length === 0) {
       // All fingers lifted
       setIsPanning(false);
+      setIsDraggingSomething(false);
       lastTouchRef.current = null;
     } else if (event.touches.length === 1 && finalOptions.pan.enabled) {
       // One finger remains (could be after a pinch, or a single touch continuing)
       // Transition to panning with this finger
       setIsPanning(true);
+      setIsDraggingSomething(true);
       pinchStateRef.current = null; // Ensure not in pinch mode
       lastTouchRef.current = {
         x: event.touches[0].clientX,
@@ -432,6 +445,8 @@ export default function Board({
         screenToWorld,
         worldToScreenLength,
         screenToWorldLength,
+        isDraggingSomething,
+        setIsDraggingSomething,
       }}
     >
       <div
