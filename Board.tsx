@@ -11,6 +11,8 @@ import {
 import Overlay from "./Overlay";
 
 // TODO: Maybe create two disctinct types for WorldCoords and ScreenCoords
+// TODO: Also add some helper functions to get the edges of the viewport in screen and world coords
+// useful for infinite grid, and adaptive function plotting
 type BoardContextType = {
   svg: SVGSVGElement | null;
   worldToScreen: (x: number, y: number) => { x: number; y: number };

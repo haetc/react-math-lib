@@ -47,13 +47,19 @@ export function Scene1() {
     >
       <Grid options={gridOptions} />
       <FunctionPlot
-        f={(x) => Math.sin(a / x)}
+        f={(x) => Math.sin(x / a)}
         options={{
           interval: [-10, 10],
           step: 0.01,
         }}
       />
-      <FunctionPlot f={quadratic}>
+      <FunctionPlot
+        f={quadratic}
+        options={{
+          interval: [-10, 10],
+          step: 0.001,
+        }}
+      >
         <AreaUnder
           interval={[t1, t2]}
           options={{

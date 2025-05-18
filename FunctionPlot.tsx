@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { boardContext } from "./Board";
 import Point from "./Point";
-import sampleFunction from "@/util/function-sampler";
+import sampleFunction, { adaptiveSampler } from "@/util/function-sampler";
 
 type FunctionPlotContextType = {
   points: { x: number; y: number }[];
@@ -35,7 +35,7 @@ type Props = {
 };
 
 export default function FunctionPlot({ f, options, children }: Props) {
-  const { worldToScreenLength, worldToScreen } = useContext(boardContext);
+  const { worldToScreenLength, worldToScreen, svg } = useContext(boardContext);
 
   const finalOptions = {
     ...defaultFunctionPlotOptions,
@@ -45,8 +45,18 @@ export default function FunctionPlot({ f, options, children }: Props) {
   // Points are in world coords
   const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
   useEffect(() => {
-    const points = sampleFunction(f, finalOptions.interval, finalOptions.step);
-    setPoints(points);
+    const points = adaptiveSampler(
+      f,
+      finalOptions.interval[0],
+      finalOptions.interval[1],
+      svg?.clientWidth ?? 0,
+      -10,
+      10,
+      svg?.clientHeight ?? 0
+    );
+
+    // Temporary flatting to test
+    setPoints(points.flat());
   }, [f, finalOptions.interval, finalOptions.step, worldToScreen]);
 
   // Converted to screen coords here for rendering
@@ -54,10 +64,10 @@ export default function FunctionPlot({ f, options, children }: Props) {
 
   const pathData =
     screenPoints.length > 0
-      ? `M ${screenPoints[0].x},${screenPoints[0].y} ` +
+      ? `M ${screenPoints[0].x} ${screenPoints[0].y} ` +
         screenPoints
           .slice(1)
-          .map((p) => `L ${p.x},${p.y}`)
+          .map((p) => `L ${p.x} ${p.y}`)
           .join(" ")
       : "";
 
