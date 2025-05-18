@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { boardContext } from "./Board";
-import { adaptiveSampler } from "./adaptive-sampler";
-import { sampleFunction } from "./adaptive-sampler2";
+import { sampleFunction } from "./adaptive-sampler";
 
 type FunctionPlotContextType = {
   points: { x: number; y: number }[];
@@ -45,27 +44,43 @@ export default function FunctionPlot({ f, options, children }: Props) {
   // Points are in world coords
   const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
   useEffect(() => {
-    const points = sampleFunction(f, {
+    const sampledPoints = sampleFunction(f, {
       xMin: finalOptions.interval[0],
       xMax: finalOptions.interval[1],
-      maxPoints: 5000,
     });
+    setPoints(sampledPoints);
+  }, [f, finalOptions.interval, worldToScreen]);
 
-    // Temporary flatting to test
-    setPoints(points);
-  }, [f, finalOptions.interval, finalOptions.step, worldToScreen]);
+  // Generate pathData by creating segments separated by non-finite points
+  let newPathData = "";
+  const currentScreenSegment: { x: number; y: number }[] = [];
 
-  // Converted to screen coords here for rendering
-  const screenPoints = points.map((p) => worldToScreen(p.x, p.y));
-
-  const pathData =
-    screenPoints.length > 0
-      ? `M ${screenPoints[0].x} ${screenPoints[0].y} ` +
-        screenPoints
+  for (const p of points) {
+    if (Number.isFinite(p.y)) {
+      currentScreenSegment.push(worldToScreen(p.x, p.y));
+    } else {
+      if (currentScreenSegment.length > 1) {
+        if (newPathData !== "") newPathData += " ";
+        newPathData += `M ${currentScreenSegment[0].x} ${currentScreenSegment[0].y} `;
+        newPathData += currentScreenSegment
           .slice(1)
-          .map((p) => `L ${p.x} ${p.y}`)
-          .join(" ")
-      : "";
+          .map((sp) => `L ${sp.x} ${sp.y}`)
+          .join(" ");
+      }
+      currentScreenSegment.length = 0;
+    }
+  }
+
+  if (currentScreenSegment.length > 1) {
+    if (newPathData !== "") newPathData += " ";
+    newPathData += `M ${currentScreenSegment[0].x} ${currentScreenSegment[0].y} `;
+    newPathData += currentScreenSegment
+      .slice(1)
+      .map((sp) => `L ${sp.x} ${sp.y}`)
+      .join(" ");
+  }
+
+  const pathData = newPathData;
 
   return (
     <functionPlotContext.Provider value={{ points, f }}>

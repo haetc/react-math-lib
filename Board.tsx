@@ -451,7 +451,11 @@ export default function Board({
           ref={svgRef}
           {...svgProps}
           onMouseDown={handleMouseDown}
+          // TODO: Put the mouseup and touchend events on the window
           onMouseUp={handleMouseUp}
+          // We can do something like this, but I think the panning should continue even if the mouse leaves the board
+          // It's just that when the mouseup event happens outside, it should still register here
+          // onMouseLeave={handleMouseUp}
           onMouseMove={handleMouseMove}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
