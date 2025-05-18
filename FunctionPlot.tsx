@@ -36,8 +36,8 @@ export default function FunctionPlot({ f, options, children }: Props) {
   const xRight = screenToWorld(svg?.clientWidth ?? 0, 0).x;
 
   // If no interval is provided, use the viewport edges (with a small buffer)
-  const xMin = interval?.[0] ?? xLeft - 1;
-  const xMax = interval?.[1] ?? xRight + 1;
+  const xMin = interval?.[0] ?? Math.floor(xLeft) - 0.123;
+  const xMax = interval?.[1] ?? Math.ceil(xRight) + 0.321;
 
   // Points are in world coords
   const [points, setPoints] = useState<{ x: number; y: number }[]>([]);

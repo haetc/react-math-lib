@@ -51,7 +51,7 @@ export function Scene1() {
         options={boardOptions}
       >
         <Grid options={gridOptions} />
-        <FunctionPlot f={(x) => a / (x - 3)} />
+        <FunctionPlot f={(x) => a / (x - 5)} />
       </Board>
       <Board
         className="w-full h-[300px] border rounded-md bg-white"

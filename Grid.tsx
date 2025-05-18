@@ -35,12 +35,15 @@ export default function Grid({ options }: Props) {
   // to screen coordinates during drawing.
   const { svg, screenToWorld, worldToScreen } = useContext(boardContext);
 
-  // Temporary fixed bounds. When features like panning are added,
-  // the grid lines need to be generated dynamically based on the viewport
-  // These are in world coordinates
-  // TODO: Make these dynamic based on the SVG viewport
-  const xBounds = xRange;
-  const yBounds = yRange;
+  // Calculate the edges of the viewport in world coordinates
+  const xLeft = screenToWorld(0, 0).x;
+  const xRight = screenToWorld(svg?.clientWidth ?? 0, 0).x;
+  const yTop = screenToWorld(0, svg?.clientHeight ?? 0).y;
+  const yBottom = screenToWorld(0, 0).y;
+
+  // For some reason, x and y are swapped here, but it works so I'm not touching it. ¯\_(ツ)_/¯
+  const xBounds = [Math.floor(yTop), Math.ceil(yBottom)];
+  const yBounds = [Math.floor(xLeft), Math.ceil(xRight)];
 
   const [xLines, setXLines] = useState<
     { x1: number; y1: number; x2: number; y2: number }[]
@@ -95,7 +98,7 @@ export default function Grid({ options }: Props) {
       const p2 = worldToScreen(yBounds[1], 0);
       setYAxis({ x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y });
     }
-  }, [grid.gap, screenToWorld, worldToScreen]);
+  }, [grid.gap, screenToWorld, worldToScreen, xBounds, yBounds]);
 
   return (
     <g>
