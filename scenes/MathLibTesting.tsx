@@ -26,7 +26,7 @@ const gridOptions: Partial<GridOptions> = {
   axes: {
     visible: true,
     stroke: "#000",
-    strokeWidth: 1,
+    strokeWidth: 2,
   },
 };
 
