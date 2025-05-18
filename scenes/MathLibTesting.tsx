@@ -47,10 +47,10 @@ export function Scene1() {
     >
       <Grid options={gridOptions} />
       <FunctionPlot
-        f={(x) => Math.sin(x / a)}
+        f={(x) => 1 / x}
         options={{
-          interval: [-10, 10],
-          step: 0.01,
+          interval: [-1, 2],
+          // step: 0.01,
         }}
       />
       <FunctionPlot

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { boardContext } from "./Board";
-import Point from "./Point";
-import sampleFunction, { adaptiveSampler } from "@/util/function-sampler";
+import { adaptiveSampler } from "./adaptive-sampler";
+import { sampleFunction } from "./adaptive-sampler2";
 
 type FunctionPlotContextType = {
   points: { x: number; y: number }[];
@@ -45,18 +45,14 @@ export default function FunctionPlot({ f, options, children }: Props) {
   // Points are in world coords
   const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
   useEffect(() => {
-    const points = adaptiveSampler(
-      f,
-      finalOptions.interval[0],
-      finalOptions.interval[1],
-      svg?.clientWidth ?? 0,
-      -10,
-      10,
-      svg?.clientHeight ?? 0
-    );
+    const points = sampleFunction(f, {
+      xMin: finalOptions.interval[0],
+      xMax: finalOptions.interval[1],
+      maxPoints: 5000,
+    });
 
     // Temporary flatting to test
-    setPoints(points.flat());
+    setPoints(points);
   }, [f, finalOptions.interval, finalOptions.step, worldToScreen]);
 
   // Converted to screen coords here for rendering
