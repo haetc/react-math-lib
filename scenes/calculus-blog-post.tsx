@@ -3,17 +3,18 @@ import Board from "../Board";
 import FunctionPlot, { type FunctionPlotOptions } from "../FunctionPlot";
 import Grid from "../Grid";
 import Point from "../Point";
+import Overlay from "../Overlay";
 
 const boardStyles = "w-[90%] mx-auto h-[500px] border rounded-md bg-white";
 
 const func = (x: number) => {
-  if (x <= 0) return 0;
-  return Math.log(x);
+  // if (x <= 0) return 0;
+  // return Math.log(x);
+  return 1 / x;
 };
 
 const derivative = (x: number) => {
-  if (x <= 0) return 0;
-  return 1 / x;
+  return -1 / x ** 2;
 };
 
 const boardOptions = {
@@ -36,7 +37,7 @@ const gridOptions = {
 };
 
 const functionPlotOptions: Partial<FunctionPlotOptions> = {
-  interval: [0.001, 10],
+  interval: [-10, 10],
   strokeWidth: 3,
   stroke: "#663399",
   step: 0.01,
@@ -80,6 +81,11 @@ export function SlopeDemonstration() {
         onDrag={(x) => setX(x)}
         options={{ draggable: "x" }}
       />
+      <Overlay className="p-4">
+        <span className="text-xl font-bold text-black">
+          Slope: {slope.toFixed(2)}
+        </span>
+      </Overlay>
     </Board>
   );
 }

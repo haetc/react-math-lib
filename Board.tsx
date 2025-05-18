@@ -56,13 +56,15 @@ type Props = {
   options?: Partial<BoardOptions>;
   zoomLevel?: number;
   panVector?: { x: number; y: number };
-} & React.SVGProps<SVGSVGElement>;
+  svgProps?: React.SVGProps<SVGSVGElement>;
+} & React.HTMLAttributes<HTMLDivElement>;
 
 export default function Board({
   children,
   options,
   zoomLevel,
   panVector,
+  svgProps,
   ...props
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -430,13 +432,6 @@ export default function Board({
       ? allChildren.filter((child) => child !== overlayEls[0])
       : allChildren;
 
-  // Extract wrapper props from svg props
-  const {
-    className: wrapperClassName,
-    style: wrapperStyle,
-    ...svgProps
-  } = props;
-
   return (
     <boardContext.Provider
       value={{
@@ -449,10 +444,7 @@ export default function Board({
         setIsDraggingSomething,
       }}
     >
-      <div
-        className={wrapperClassName}
-        style={{ position: "relative", ...wrapperStyle }}
-      >
+      <div {...props} style={{ position: "relative" }}>
         <svg
           ref={svgRef}
           {...svgProps}
