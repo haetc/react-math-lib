@@ -15,16 +15,8 @@ export const functionPlotContext = createContext<FunctionPlotContextType>({
 
 export type FunctionPlotOptions = {
   interval: [number, number];
-  step: number;
   stroke: string;
   strokeWidth: number;
-};
-
-const defaultFunctionPlotOptions: FunctionPlotOptions = {
-  interval: [-10, 10],
-  step: 0.1,
-  stroke: "black",
-  strokeWidth: 1,
 };
 
 type Props = {
@@ -34,22 +26,28 @@ type Props = {
 };
 
 export default function FunctionPlot({ f, options, children }: Props) {
-  const { worldToScreenLength, worldToScreen, svg } = useContext(boardContext);
+  const { worldToScreenLength, worldToScreen, screenToWorld, svg } =
+    useContext(boardContext);
 
-  const finalOptions = {
-    ...defaultFunctionPlotOptions,
-    ...options,
-  };
+  const { interval, stroke = "black", strokeWidth = 1 } = options ?? {};
+
+  // Calculate the edges of the viewport in world coordinates
+  const xLeft = screenToWorld(0, 0).x;
+  const xRight = screenToWorld(svg?.clientWidth ?? 0, 0).x;
+
+  // If no interval is provided, use the viewport edges (with a small buffer)
+  const xMin = interval?.[0] ?? xLeft - 1;
+  const xMax = interval?.[1] ?? xRight + 1;
 
   // Points are in world coords
   const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
   useEffect(() => {
     const sampledPoints = sampleFunction(f, {
-      xMin: finalOptions.interval[0],
-      xMax: finalOptions.interval[1],
+      xMin,
+      xMax,
     });
     setPoints(sampledPoints);
-  }, [f, finalOptions.interval, worldToScreen]);
+  }, [f, xMin, xMax, worldToScreen]);
 
   // Generate pathData by creating segments separated by non-finite points
   let newPathData = "";
@@ -86,8 +84,8 @@ export default function FunctionPlot({ f, options, children }: Props) {
     <functionPlotContext.Provider value={{ points, f }}>
       <path
         fill="none"
-        stroke={finalOptions.stroke}
-        strokeWidth={finalOptions.strokeWidth}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
         d={pathData}
       />
       {children}

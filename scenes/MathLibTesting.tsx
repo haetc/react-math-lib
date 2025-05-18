@@ -51,30 +51,15 @@ export function Scene1() {
         options={boardOptions}
       >
         <Grid options={gridOptions} />
-        <FunctionPlot
-          f={(x) => a / (x - 3)}
-          options={{
-            interval: [-10, 10],
-          }}
-        />
+        <FunctionPlot f={(x) => a / (x - 3)} />
       </Board>
       <Board
         className="w-full h-[300px] border rounded-md bg-white"
         options={boardOptions}
       >
         <Grid options={gridOptions} />
-        <FunctionPlot
-          f={(x) => Math.sin(a / x)}
-          options={{
-            interval: [-10, 11],
-          }}
-        />
-        <FunctionPlot
-          f={(x) => Math.sin(a * x)}
-          options={{
-            interval: [-10, 10],
-          }}
-        />
+        <FunctionPlot f={(x) => Math.sin(a / x)} />
+        <FunctionPlot f={(x) => Math.sin(a * x)} />
       </Board>
     </>
   );
