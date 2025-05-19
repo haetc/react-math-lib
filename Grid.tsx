@@ -26,8 +26,8 @@ export default function Grid({ options }: Props) {
   const {
     grid = { visible: true, stroke: "black", strokeWidth: 1, gap: 1 },
     axes = { visible: true, stroke: "black", strokeWidth: 2 },
-    xRange = [-10, 10],
-    yRange = [-10, 10],
+    xRange,
+    yRange,
   } = options ?? {};
 
   // The coordinates for the grid lines need to be in world coordinates
@@ -42,8 +42,8 @@ export default function Grid({ options }: Props) {
   const yBottom = screenToWorld(0, 0).y;
 
   // For some reason, x and y are swapped here, but it works so I'm not touching it. ¯\_(ツ)_/¯
-  const xBounds = [Math.floor(yTop), Math.ceil(yBottom)];
-  const yBounds = [Math.floor(xLeft), Math.ceil(xRight)];
+  const xBounds = xRange ?? [Math.floor(yTop), Math.ceil(yBottom)];
+  const yBounds = yRange ?? [Math.floor(xLeft), Math.ceil(xRight)];
 
   const [xLines, setXLines] = useState<
     { x1: number; y1: number; x2: number; y2: number }[]

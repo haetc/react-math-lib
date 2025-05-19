@@ -44,7 +44,7 @@ export type BoardOptions = {
 };
 
 const defaultBoardOptions: BoardOptions = {
-  unit: 10,
+  unit: 50,
   zoom: {
     enabled: true,
   },
