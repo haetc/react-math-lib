@@ -1,3 +1,7 @@
+// All credit for the original C algorithm goes to Victor Liu (vkl@stanford.edu)
+// https://github.com/victorliu/S4/blob/master/modules/function_sampler_1d.c
+// This is a port of the algorithm to TypeScript by me
+
 // Constants for default values, inspired by the C code
 const DBL_EPSILON = Number.EPSILON;
 const DEFAULT_MIN_DX = 1e-6;

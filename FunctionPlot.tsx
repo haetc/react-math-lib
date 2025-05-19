@@ -46,6 +46,7 @@ export default function FunctionPlot({ f, options, children }: Props) {
       xMin,
       xMax,
     });
+
     setPoints(sampledPoints);
   }, [f, xMin, xMax, worldToScreen]);
 
