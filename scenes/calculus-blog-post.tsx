@@ -5,7 +5,10 @@ import Grid from "../Grid";
 import Point from "../Point";
 import Overlay from "../Overlay";
 
-const boardStyles = "w-[90%] mx-auto h-[500px] border rounded-md bg-white";
+const boardStyles =
+  "w-[90%] mx-auto h-[500px] border-2 border-[var(--md-border)] rounded-md bg-[var(--background)]/50 text-[var(--foreground)]";
+
+const gridClassName = "!stroke-[var(--foreground)]";
 
 const func = (x: number) => {
   // if (x <= 0) return 0;
@@ -19,12 +22,6 @@ const derivative = (x: number) => {
 
 const boardOptions = {
   unit: 70,
-  pan: {
-    enabled: false,
-  },
-  zoom: {
-    enabled: false,
-  },
 };
 
 const gridOptions = {
@@ -37,17 +34,19 @@ const gridOptions = {
 };
 
 const functionPlotOptions: Partial<FunctionPlotOptions> = {
-  interval: [-10, 10],
   strokeWidth: 3,
   stroke: "#663399",
-  step: 0.01,
 };
 
 export function InitialGraph() {
   return (
     <Board className={boardStyles} options={boardOptions}>
-      <Grid options={gridOptions} />
-      <FunctionPlot f={func} options={functionPlotOptions} />
+      <Grid options={gridOptions} className={gridClassName} />
+      <FunctionPlot
+        f={func}
+        options={functionPlotOptions}
+        className="!stroke-[var(--md-link)]"
+      />
     </Board>
   );
 }
@@ -63,15 +62,18 @@ export function SlopeDemonstration() {
 
   return (
     <Board className={boardStyles} options={boardOptions}>
-      <Grid options={gridOptions} />
-      <FunctionPlot f={func} options={functionPlotOptions} />
+      <Grid options={gridOptions} className={gridClassName} />
+      <FunctionPlot
+        f={func}
+        options={functionPlotOptions}
+        className="!stroke-[var(--md-link)]"
+      />
       <FunctionPlot
         f={line}
         options={{
-          interval: [-10, 10],
-          stroke: "darkblue",
-          strokeWidth: 2,
+          strokeWidth: 2.5,
         }}
+        className="!stroke-blue-400"
       />
       <Point
         // TODO: This point being constrained to a function is a bit of a hack,
@@ -80,11 +82,10 @@ export function SlopeDemonstration() {
         y={func(x)}
         onDrag={(x) => setX(x)}
         options={{ draggable: "x" }}
+        className="!stroke-[var(--foreground)] !fill-[var(--foreground)]"
       />
       <Overlay className="p-4">
-        <span className="text-xl font-bold text-black">
-          Slope: {slope.toFixed(2)}
-        </span>
+        <span className="text-xl font-bold">Slope: {slope.toFixed(2)}</span>
       </Overlay>
     </Board>
   );

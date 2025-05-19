@@ -20,9 +20,9 @@ export type GridOptions = {
 
 type Props = {
   options?: Partial<GridOptions>;
-};
+} & React.SVGProps<SVGLineElement>;
 
-export default function Grid({ options }: Props) {
+export default function Grid({ options, ...props }: Props) {
   const {
     grid = { visible: true, stroke: "black", strokeWidth: 1, gap: 1 },
     axes = { visible: true, stroke: "black", strokeWidth: 2 },
@@ -109,6 +109,7 @@ export default function Grid({ options }: Props) {
             {...line}
             stroke={grid.stroke}
             strokeWidth={grid.strokeWidth}
+            {...props}
           />
         ))}
       {grid.visible &&
@@ -118,13 +119,24 @@ export default function Grid({ options }: Props) {
             {...line}
             stroke={grid.stroke}
             strokeWidth={grid.strokeWidth}
+            {...props}
           />
         ))}
       {axes.visible && xAxis && (
-        <line {...xAxis} stroke={axes.stroke} strokeWidth={axes.strokeWidth} />
+        <line
+          {...xAxis}
+          stroke={axes.stroke}
+          strokeWidth={axes.strokeWidth}
+          {...props}
+        />
       )}
       {axes.visible && yAxis && (
-        <line {...yAxis} stroke={axes.stroke} strokeWidth={axes.strokeWidth} />
+        <line
+          {...yAxis}
+          stroke={axes.stroke}
+          strokeWidth={axes.strokeWidth}
+          {...props}
+        />
       )}
     </g>
   );

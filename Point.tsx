@@ -14,9 +14,10 @@ type Props = {
   y: number;
   onDrag?: (x: number, y: number) => void;
   options?: Partial<PointOptions>;
-};
+  // Apparently the SVG element already has an onDrag prop, so we gotta omit that
+} & Omit<React.SVGProps<SVGCircleElement>, "onDrag">;
 
-export default function Point({ x, y, onDrag, options }: Props) {
+export default function Point({ x, y, onDrag, options, ...props }: Props) {
   const {
     svg,
     worldToScreen,
@@ -182,6 +183,7 @@ export default function Point({ x, y, onDrag, options }: Props) {
         r={radius}
         fill={fill}
         ref={circleRef}
+        {...props}
       />
       {draggable !== "none" && (
         // The invisible circle on top of the visual circle

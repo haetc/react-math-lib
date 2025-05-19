@@ -23,9 +23,14 @@ type Props = {
   f: (x: number) => number;
   options?: Partial<FunctionPlotOptions>;
   children?: React.ReactNode;
-};
+} & React.SVGProps<SVGPathElement>;
 
-export default function FunctionPlot({ f, options, children }: Props) {
+export default function FunctionPlot({
+  f,
+  options,
+  children,
+  ...props
+}: Props) {
   const { worldToScreenLength, worldToScreen, screenToWorld, svg } =
     useContext(boardContext);
 
@@ -88,6 +93,7 @@ export default function FunctionPlot({ f, options, children }: Props) {
         stroke={stroke}
         strokeWidth={strokeWidth}
         d={pathData}
+        {...props}
       />
       {children}
     </functionPlotContext.Provider>
