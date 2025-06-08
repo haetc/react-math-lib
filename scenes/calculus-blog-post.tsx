@@ -4,6 +4,7 @@ import FunctionPlot, { type FunctionPlotOptions } from "../FunctionPlot";
 import Grid from "../Grid";
 import Point from "../Point";
 import Overlay from "../Overlay";
+import InlineMath from "../InlineMath";
 
 const boardStyles =
   "w-[90%] mx-auto h-[500px] border-2 border-[var(--md-border)] rounded-md bg-[var(--background)]/50 text-[var(--foreground)]";
@@ -11,13 +12,10 @@ const boardStyles =
 const gridClassName = "!stroke-[var(--foreground)]";
 
 const func = (x: number) => {
-  // if (x <= 0) return 0;
-  // return Math.log(x);
-  return 1 / x;
+  return Math.exp(-x / 2);
 };
-
 const derivative = (x: number) => {
-  return -1 / x ** 2;
+  return (-1 / 2) * Math.exp(-x / 2);
 };
 
 const boardOptions = {
@@ -47,6 +45,9 @@ export function InitialGraph() {
         options={functionPlotOptions}
         className="!stroke-[var(--md-link)]"
       />
+      <Overlay className="p-4">
+        <InlineMath className="text-xl" latex="f(x) = e^{-x/2}" />
+      </Overlay>
     </Board>
   );
 }
@@ -84,8 +85,12 @@ export function SlopeDemonstration() {
         options={{ draggable: "x" }}
         className="!stroke-[var(--foreground)] !fill-[var(--foreground)]"
       />
-      <Overlay className="p-4">
-        <span className="text-xl font-bold">Slope: {slope.toFixed(2)}</span>
+      <Overlay className="p-2">
+        <div className="flex flex-col gap-2 text-lg max-w-max bg-[var(--background)]/50 border-1 border-[var(--md-border)] rounded-md p-2">
+          <InlineMath latex="f(x) = e^{-x/2}" />
+          <InlineMath latex="f'(x) = -\frac{1}{2}e^{-x/2}" />
+          <InlineMath latex={`f'(${x.toFixed(2)}) = ${slope.toFixed(2)}`} />
+        </div>
       </Overlay>
     </Board>
   );

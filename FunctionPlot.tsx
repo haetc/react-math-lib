@@ -47,9 +47,11 @@ export default function FunctionPlot({
   // Points are in world coords
   const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
   useEffect(() => {
+    // TODO: Make these available as options as well
     const sampledPoints = sampleFunction(f, {
       xMin,
       xMax,
+      initialPoints: 100,
     });
 
     setPoints(sampledPoints);
