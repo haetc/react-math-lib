@@ -1,11 +1,15 @@
 "use client";
-import katex from "katex";
+import katex, { type KatexOptions } from "katex";
 
 export default function InlineMath({
   latex,
+  options,
   ...props
-}: { latex: string } & React.HTMLAttributes<HTMLSpanElement>) {
-  const html = katex.renderToString(latex);
+}: {
+  latex: string;
+  options?: KatexOptions;
+} & React.HTMLAttributes<HTMLSpanElement>) {
+  const html = katex.renderToString(latex, options);
 
   return <span dangerouslySetInnerHTML={{ __html: html }} {...props} />;
 }
